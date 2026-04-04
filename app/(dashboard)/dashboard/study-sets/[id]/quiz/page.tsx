@@ -1,0 +1,63 @@
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { redirect, notFound } from "next/navigation";
+import { QuizPlayer } from "@/components/quiz-player";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
+interface Props {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ testId?: string }>;
+}
+
+export default async function QuizPage({ params, searchParams }: Props) {
+  const { id: studySetId } = await params;
+  const { testId } = await searchParams;
+  const session = await auth();
+  if (!session?.user?.id) redirect("/sign-in");
+
+  if (!testId) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-4 text-center py-12">
+        <p className="text-muted-foreground">No test selected.</p>
+        <Link href={`/dashboard/study-sets/${studySetId}`}>
+          <Button variant="outline">Back to study set</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const test = await prisma.test.findFirst({
+    where: { id: testId, userId: session.user.id, studySetId },
+  });
+
+  if (!test) notFound();
+
+  const questions = test.questions as {
+    question: string;
+    options: string[];
+    correctIndex: number;
+    explanation: string;
+    concept: string;
+  }[];
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="font-heading text-xl font-semibold">
+          {test.type === "QUIZ" ? "Quiz" : test.type.replace("_", " ")}
+        </h1>
+        <Link href={`/dashboard/study-sets/${studySetId}`}>
+          <Button variant="ghost" size="sm">
+            Back
+          </Button>
+        </Link>
+      </div>
+      <QuizPlayer
+        testId={test.id}
+        questions={questions}
+        studySetId={studySetId}
+      />
+    </div>
+  );
+}
