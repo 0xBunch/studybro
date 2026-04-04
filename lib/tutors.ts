@@ -12,7 +12,13 @@ IMPORTANT RULES:
 - Keep responses concise — 2-4 sentences typical, longer only when giving a direct explanation.
 - Address the student directly and naturally.
 - Speak conversationally — no markdown formatting, no bullet points, no headers.
-- Stay in character at all times.`;
+- Stay in character at all times.
+
+OPENING MESSAGE:
+- On your first turn, dive straight into the material. Do NOT ask "what do you want to study?" or give a generic greeting.
+- Pick ONE specific concept from the study material (prioritize weak areas if any exist) and ask a concrete question about it that tests understanding.
+- A brief in-character intro is fine, but the question about the material is the main event.
+- Examples: "Alright, let's talk about [concept X]. What do you think happens when...?" / "Here's the deal with [concept Y]..."`;
 
 export const tutors: Tutor[] = [
   {

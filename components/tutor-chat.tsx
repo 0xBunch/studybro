@@ -65,7 +65,13 @@ export function TutorChat({ tutor, concepts, weakConcepts, studySetId }: Props) 
             messages:
               newMessages.length > 0
                 ? newMessages
-                : [{ role: "user", content: "Hello! I'm ready to study." }],
+                : [
+                    {
+                      role: "user",
+                      content:
+                        "Let's begin. Start by asking me a specific question about one of the concepts from my study material.",
+                    },
+                  ],
             concepts,
             weakConcepts,
             tutorId: tutor.id,
