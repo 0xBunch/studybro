@@ -2,6 +2,7 @@ import { USER_ID } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { QuizPlayer } from "@/components/quiz-player";
+import { FlashcardPlayer } from "@/components/flashcard-player";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -31,31 +32,51 @@ export default async function QuizPage({ params, searchParams }: Props) {
 
   if (!test) notFound();
 
-  const questions = test.questions as {
-    question: string;
-    options: string[];
-    correctIndex: number;
-    explanation: string;
-    concept: string;
-  }[];
+  const title =
+    test.type === "QUIZ"
+      ? "Quiz"
+      : test.type === "FLASHCARD"
+        ? "Flashcards"
+        : "Reverse Flashcards";
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="font-heading text-xl font-semibold">
-          {test.type === "QUIZ" ? "Quiz" : test.type.replace("_", " ")}
-        </h1>
+        <h1 className="font-heading text-xl font-semibold">{title}</h1>
         <Link href={`/dashboard/study-sets/${studySetId}`}>
           <Button variant="ghost" size="sm">
             Back
           </Button>
         </Link>
       </div>
-      <QuizPlayer
-        testId={test.id}
-        questions={questions}
-        studySetId={studySetId}
-      />
+
+      {test.type === "QUIZ" ? (
+        <QuizPlayer
+          testId={test.id}
+          questions={
+            test.questions as {
+              question: string;
+              options: string[];
+              correctIndex: number;
+              explanation: string;
+              concept: string;
+            }[]
+          }
+          studySetId={studySetId}
+        />
+      ) : (
+        <FlashcardPlayer
+          testId={test.id}
+          cards={
+            test.questions as {
+              front: string;
+              back: string;
+              concept: string;
+            }[]
+          }
+          studySetId={studySetId}
+        />
+      )}
     </div>
   );
 }
