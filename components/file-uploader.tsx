@@ -15,7 +15,9 @@ interface UploadItem {
   file: File;
   status: "pending" | "uploading" | "processing" | "done" | "error";
   progress: number;
+  step?: string;
   error?: string;
+  elapsed?: number;
 }
 
 const ACCEPTED_TYPES = [
@@ -31,6 +33,12 @@ export function FileUploader({
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
 
+  const updateItem = (idx: number, updates: Partial<UploadItem>) => {
+    setUploads((prev) =>
+      prev.map((u, j) => (j === idx ? { ...u, ...updates } : u))
+    );
+  };
+
   const handleFiles = useCallback(
     async (files: FileList | File[]) => {
       const newFiles = Array.from(files).filter((f) =>
@@ -43,6 +51,7 @@ export function FileUploader({
         file,
         status: "pending",
         progress: 0,
+        step: "Queued",
       }));
 
       setUploads((prev) => [...prev, ...items]);
@@ -50,15 +59,27 @@ export function FileUploader({
       for (let i = 0; i < newFiles.length; i++) {
         const file = newFiles[i];
         const idx = uploads.length + i;
+        const startTime = Date.now();
 
-        try {
+        const tick = () => {
           setUploads((prev) =>
             prev.map((u, j) =>
-              j === idx ? { ...u, status: "uploading", progress: 10 } : u
+              j === idx && u.status !== "done" && u.status !== "error"
+                ? { ...u, elapsed: Math.round((Date.now() - startTime) / 1000) }
+                : u
             )
           );
+        };
+        const timer = setInterval(tick, 1000);
 
-          // Upload file through our API (server proxies to R2)
+        try {
+          // Step 1: Upload to server
+          updateItem(idx, {
+            status: "uploading",
+            progress: 10,
+            step: "Uploading to server...",
+          });
+
           const formData = new FormData();
           formData.append("file", file);
           formData.append("studySetId", studySetId);
@@ -70,43 +91,59 @@ export function FileUploader({
 
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
-            throw new Error(data.error || "Upload failed");
+            throw new Error(
+              `Upload failed (${res.status}): ${data.error || res.statusText}`
+            );
           }
 
           const { uploadId } = await res.json();
 
-          setUploads((prev) =>
-            prev.map((u, j) =>
-              j === idx ? { ...u, status: "processing", progress: 60 } : u
-            )
-          );
+          updateItem(idx, {
+            progress: 40,
+            step: `Uploaded. Upload ID: ${uploadId.slice(0, 8)}...`,
+          });
 
-          // Process with Claude
+          // Step 2: Extract text + Claude analysis
+          updateItem(idx, {
+            status: "processing",
+            progress: 50,
+            step: "Extracting text & analyzing with AI (this can take 15-30s)...",
+          });
+
           const processRes = await fetch("/api/process", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ uploadId }),
           });
 
-          if (!processRes.ok) throw new Error("Processing failed");
+          if (!processRes.ok) {
+            const data = await processRes.json().catch(() => ({}));
+            throw new Error(
+              `Processing failed (${processRes.status}): ${data.error || processRes.statusText}`
+            );
+          }
 
-          setUploads((prev) =>
-            prev.map((u, j) =>
-              j === idx ? { ...u, status: "done", progress: 100 } : u
-            )
-          );
+          clearInterval(timer);
+          const finalElapsed = Math.round((Date.now() - startTime) / 1000);
+
+          updateItem(idx, {
+            status: "done",
+            progress: 100,
+            step: `Complete in ${finalElapsed}s`,
+            elapsed: finalElapsed,
+          });
         } catch (err) {
-          setUploads((prev) =>
-            prev.map((u, j) =>
-              j === idx
-                ? {
-                    ...u,
-                    status: "error",
-                    error: err instanceof Error ? err.message : "Unknown error",
-                  }
-                : u
-            )
-          );
+          clearInterval(timer);
+          const finalElapsed = Math.round((Date.now() - startTime) / 1000);
+          const message =
+            err instanceof Error ? err.message : "Unknown error";
+
+          updateItem(idx, {
+            status: "error",
+            error: message,
+            step: `Failed after ${finalElapsed}s`,
+            elapsed: finalElapsed,
+          });
         }
       }
 
@@ -163,33 +200,58 @@ export function FileUploader({
           {uploads.map((item, i) => (
             <div
               key={i}
-              className="flex items-center gap-3 rounded-md border p-3"
+              className="rounded-md border p-3 space-y-1.5"
             >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{item.file.name}</p>
-                {item.status !== "done" && item.status !== "error" && (
-                  <Progress value={item.progress} className="mt-1 h-1" />
-                )}
-              </div>
-              <Badge
-                variant={
-                  item.status === "done"
-                    ? "default"
-                    : item.status === "error"
-                      ? "destructive"
-                      : "secondary"
-                }
-              >
-                {item.status === "uploading"
-                  ? "Uploading..."
-                  : item.status === "processing"
-                    ? "Processing..."
-                    : item.status === "done"
-                      ? "Done"
+              <div className="flex items-center gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">
+                    {item.file.name}
+                  </p>
+                </div>
+                <Badge
+                  variant={
+                    item.status === "done"
+                      ? "default"
                       : item.status === "error"
-                        ? "Error"
-                        : "Pending"}
-              </Badge>
+                        ? "destructive"
+                        : "secondary"
+                  }
+                >
+                  {item.status === "uploading"
+                    ? "Uploading"
+                    : item.status === "processing"
+                      ? "Processing"
+                      : item.status === "done"
+                        ? "Done"
+                        : item.status === "error"
+                          ? "Error"
+                          : "Pending"}
+                  {item.elapsed !== undefined && ` (${item.elapsed}s)`}
+                </Badge>
+              </div>
+
+              {item.status !== "done" && item.status !== "error" && (
+                <Progress value={item.progress} className="h-1" />
+              )}
+
+              {item.step && (
+                <p
+                  className={cn(
+                    "text-xs font-mono",
+                    item.status === "error"
+                      ? "text-destructive"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  {item.step}
+                </p>
+              )}
+
+              {item.error && (
+                <p className="text-xs font-mono text-destructive break-all">
+                  {item.error}
+                </p>
+              )}
             </div>
           ))}
         </div>
