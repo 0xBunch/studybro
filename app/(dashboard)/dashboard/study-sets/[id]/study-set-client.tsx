@@ -83,7 +83,7 @@ export function StudySetClient({ data }: { data: StudySetData }) {
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="font-heading text-2xl font-semibold h-auto py-1"
+                className="font-heading text-2xl h-auto py-1"
               />
               <Input
                 value={description}
@@ -106,7 +106,7 @@ export function StudySetClient({ data }: { data: StudySetData }) {
             </div>
           ) : (
             <div>
-              <h1 className="font-heading text-2xl font-semibold">{data.title}</h1>
+              <h1 className="font-heading text-2xl">{data.title}</h1>
               {data.description && (
                 <p className="text-sm text-muted-foreground">{data.description}</p>
               )}

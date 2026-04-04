@@ -41,7 +41,7 @@ export default function NewStudySetPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="font-heading text-2xl font-semibold">
+        <h1 className="font-heading text-2xl">
           New Study Set
         </h1>
         <p className="text-sm text-muted-foreground">

@@ -86,7 +86,7 @@ export function FlashcardPlayer({ testId, cards, studySetId }: Props) {
     return (
       <div className="space-y-6 text-center">
         <div className="space-y-2">
-          <h2 className="font-heading text-3xl font-semibold">{score}%</h2>
+          <h2 className="font-heading text-3xl">{score}%</h2>
           <p className="text-muted-foreground">
             {correct} of {cards.length} cards known
           </p>

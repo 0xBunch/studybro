@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function DashboardLayout({
   children,
@@ -9,7 +10,10 @@ export default function DashboardLayout({
     <div className="flex min-h-dvh flex-col">
       <header className="flex items-center justify-between border-b px-6 py-3">
         <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="font-heading text-lg font-semibold">
+          <Link
+            href="/dashboard"
+            className="font-heading text-xl tracking-tight"
+          >
             Churro Academy
           </Link>
           <nav className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -21,6 +25,7 @@ export default function DashboardLayout({
             </Link>
           </nav>
         </div>
+        <ThemeToggle />
       </header>
       <main className="flex-1 px-6 py-6">{children}</main>
     </div>

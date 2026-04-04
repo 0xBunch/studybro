@@ -25,7 +25,7 @@ export default async function DashboardPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-2xl font-semibold">Study Sets</h1>
+          <h1 className="font-heading text-2xl">Study Sets</h1>
           <p className="text-sm text-muted-foreground">
             Your uploaded materials and generated tests
           </p>

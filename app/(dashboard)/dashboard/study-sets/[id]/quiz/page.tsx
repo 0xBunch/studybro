@@ -43,7 +43,7 @@ export default async function QuizPage({ params, searchParams }: Props) {
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="font-heading text-xl font-semibold">{title}</h1>
+        <h1 className="font-heading text-xl">{title}</h1>
         <Link href={`/dashboard/study-sets/${studySetId}`}>
           <Button variant="ghost" size="sm">
             Back

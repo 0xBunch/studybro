@@ -103,7 +103,7 @@ export function QuizPlayer({ testId, questions, studySetId }: Props) {
     return (
       <div className="space-y-6">
         <div className="text-center space-y-2">
-          <h2 className="font-heading text-3xl font-semibold">
+          <h2 className="font-heading text-3xl">
             {score}%
           </h2>
           <p className="text-muted-foreground">
