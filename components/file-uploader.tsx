@@ -58,31 +58,22 @@ export function FileUploader({
             )
           );
 
-          // Get presigned URL
+          // Upload file through our API (server proxies to R2)
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("studySetId", studySetId);
+
           const res = await fetch("/api/upload", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              studySetId,
-              fileName: file.name,
-              fileType: file.type,
-            }),
+            body: formData,
           });
 
-          if (!res.ok) throw new Error("Failed to get upload URL");
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || "Upload failed");
+          }
 
-          const { presignedUrl, uploadId } = await res.json();
-
-          setUploads((prev) =>
-            prev.map((u, j) => (j === idx ? { ...u, progress: 30 } : u))
-          );
-
-          // Upload to R2
-          await fetch(presignedUrl, {
-            method: "PUT",
-            body: file,
-            headers: { "Content-Type": file.type },
-          });
+          const { uploadId } = await res.json();
 
           setUploads((prev) =>
             prev.map((u, j) =>
@@ -151,14 +142,6 @@ export function FileUploader({
           Drag &amp; drop files here, or click to browse
         </p>
         <p className="text-xs text-muted-foreground">PDF, DOCX, or TXT</p>
-        <input
-          type="file"
-          accept=".pdf,.docx,.txt"
-          multiple
-          className="absolute inset-0 cursor-pointer opacity-0"
-          onChange={(e) => e.target.files && handleFiles(e.target.files)}
-          style={{ position: "relative" }}
-        />
         <Button
           variant="outline"
           size="sm"
