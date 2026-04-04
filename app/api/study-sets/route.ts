@@ -1,29 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { USER_ID, USER_EMAIL, USER_NAME } from "@/lib/auth";
+import { getOrCreateSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
+    const sessionId = await getOrCreateSession();
     const { title, description } = await req.json();
 
     if (!title?.trim()) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
     }
 
-    // Ensure the default user exists in the database
-    await prisma.user.upsert({
-      where: { id: USER_ID },
-      update: {},
-      create: {
-        id: USER_ID,
-        email: USER_EMAIL,
-        name: USER_NAME,
-      },
-    });
-
     const studySet = await prisma.studySet.create({
       data: {
-        userId: USER_ID,
+        sessionId,
         title: title.trim(),
         description: description?.trim() || null,
       },

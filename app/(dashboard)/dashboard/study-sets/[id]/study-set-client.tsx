@@ -39,6 +39,7 @@ interface StudySetData {
   id: string;
   title: string;
   description: string | null;
+  isExample: boolean;
   uploads: Upload[];
   tests: Test[];
   concepts: Concept[];
@@ -105,28 +106,37 @@ export function StudySetClient({ data }: { data: StudySetData }) {
               </div>
             </div>
           ) : (
-            <div>
-              <h1 className="font-heading text-2xl">{data.title}</h1>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <h1 className="font-heading text-2xl">{data.title}</h1>
+                {data.isExample && (
+                  <Badge variant="secondary" className="text-xs">
+                    Example
+                  </Badge>
+                )}
+              </div>
               {data.description && (
                 <p className="text-sm text-muted-foreground">{data.description}</p>
               )}
             </div>
           )}
         </div>
-        <div className="flex gap-2 shrink-0">
-          {!editing && (
-            <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-              Edit
+        {!data.isExample && (
+          <div className="flex gap-2 shrink-0">
+            {!editing && (
+              <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                Edit
+              </Button>
+            )}
+            <Button size="sm" variant="ghost" onClick={handleDelete} disabled={deleting} className="text-destructive hover:text-destructive">
+              {deleting ? "Deleting..." : "Delete"}
             </Button>
-          )}
-          <Button size="sm" variant="ghost" onClick={handleDelete} disabled={deleting} className="text-destructive hover:text-destructive">
-            {deleting ? "Deleting..." : "Delete"}
-          </Button>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Empty state: no uploads yet */}
-      {data.uploads.length === 0 && (
+      {data.uploads.length === 0 && !data.isExample && (
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-8 text-center">
             <p className="text-sm text-muted-foreground">
@@ -237,9 +247,11 @@ export function StudySetClient({ data }: { data: StudySetData }) {
             <CardTitle className="text-base">
               Uploads ({data.uploads.length})
             </CardTitle>
-            <Button size="sm" variant="outline" onClick={() => setShowUploader(!showUploader)}>
-              {showUploader ? "Hide" : "Add files"}
-            </Button>
+            {!data.isExample && (
+              <Button size="sm" variant="outline" onClick={() => setShowUploader(!showUploader)}>
+                {showUploader ? "Hide" : "Add files"}
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             {showUploader && (

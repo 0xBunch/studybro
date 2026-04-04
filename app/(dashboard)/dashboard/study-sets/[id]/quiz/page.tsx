@@ -1,4 +1,4 @@
-import { USER_ID } from "@/lib/auth";
+import { getOrCreateSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { QuizPlayer } from "@/components/quiz-player";
@@ -15,6 +15,7 @@ interface Props {
 export default async function QuizPage({ params, searchParams }: Props) {
   const { id: studySetId } = await params;
   const { testId } = await searchParams;
+  const sessionId = await getOrCreateSession();
 
   if (!testId) {
     return (
@@ -28,7 +29,7 @@ export default async function QuizPage({ params, searchParams }: Props) {
   }
 
   const test = await prisma.test.findFirst({
-    where: { id: testId, userId: USER_ID, studySetId },
+    where: { id: testId, sessionId, studySetId },
   });
 
   if (!test) notFound();

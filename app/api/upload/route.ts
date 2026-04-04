@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { USER_ID } from "@/lib/auth";
+import { getOrCreateSession, EXAMPLE_SESSION_ID } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { uploadToStorage } from "@/lib/storage";
 import { randomUUID } from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
+    const sessionId = await getOrCreateSession();
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     const studySetId = formData.get("studySetId") as string | null;
@@ -17,19 +18,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const fileKey = `${USER_ID}/${studySetId}/${randomUUID()}-${file.name}`;
+    // Guard: can't upload to the example
+    const studySet = await prisma.studySet.findUnique({
+      where: { id: studySetId },
+      select: { sessionId: true },
+    });
+    if (!studySet || studySet.sessionId !== sessionId) {
+      return NextResponse.json({ error: "Study set not found" }, { status: 404 });
+    }
+    if (studySet.sessionId === EXAMPLE_SESSION_ID) {
+      return NextResponse.json(
+        { error: "Example study set is read-only" },
+        { status: 403 }
+      );
+    }
+
+    const fileKey = `${sessionId}/${studySetId}/${randomUUID()}-${file.name}`;
 
     const upload = await prisma.upload.create({
       data: {
         studySetId,
-        userId: USER_ID,
+        sessionId,
         fileName: file.name,
         fileKey,
         fileType: file.type,
       },
     });
 
-    // Upload directly to R2 from the server (no CORS issues)
     const buffer = Buffer.from(await file.arrayBuffer());
     await uploadToStorage(fileKey, buffer, file.type);
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { USER_ID } from "@/lib/auth";
+import { getOrCreateSession, EXAMPLE_SESSION_ID } from "@/lib/session";
 import { prisma } from "@/lib/db";
 
 export async function PATCH(
@@ -7,11 +7,24 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const sessionId = await getOrCreateSession();
     const { id } = await params;
     const { title, description } = await req.json();
 
+    // Guard: the example study set is read-only
+    const existing = await prisma.studySet.findUnique({
+      where: { id },
+      select: { sessionId: true },
+    });
+    if (existing?.sessionId === EXAMPLE_SESSION_ID) {
+      return NextResponse.json(
+        { error: "Example study set is read-only" },
+        { status: 403 }
+      );
+    }
+
     const studySet = await prisma.studySet.updateMany({
-      where: { id, userId: USER_ID },
+      where: { id, sessionId },
       data: {
         ...(title !== undefined && { title: title.trim() }),
         ...(description !== undefined && { description: description.trim() || null }),
@@ -37,10 +50,23 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const sessionId = await getOrCreateSession();
     const { id } = await params;
 
+    // Guard: can't delete the example
+    const existing = await prisma.studySet.findUnique({
+      where: { id },
+      select: { sessionId: true },
+    });
+    if (existing?.sessionId === EXAMPLE_SESSION_ID) {
+      return NextResponse.json(
+        { error: "Example study set is read-only" },
+        { status: 403 }
+      );
+    }
+
     const result = await prisma.studySet.deleteMany({
-      where: { id, userId: USER_ID },
+      where: { id, sessionId },
     });
 
     if (result.count === 0) {

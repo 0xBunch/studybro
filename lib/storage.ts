@@ -2,6 +2,8 @@ import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  ListObjectsV2Command,
+  DeleteObjectsCommand,
 } from "@aws-sdk/client-s3";
 
 const s3 = new S3Client({
@@ -27,6 +29,39 @@ export async function uploadToStorage(
     ContentType: contentType,
   });
   await s3.send(command);
+}
+
+export async function deleteByPrefix(prefix: string): Promise<number> {
+  let totalDeleted = 0;
+  let continuationToken: string | undefined;
+
+  do {
+    const list = await s3.send(
+      new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: prefix,
+        ContinuationToken: continuationToken,
+      })
+    );
+
+    if (!list.Contents || list.Contents.length === 0) break;
+
+    const keys = list.Contents.filter((o) => o.Key).map((o) => ({
+      Key: o.Key!,
+    }));
+
+    await s3.send(
+      new DeleteObjectsCommand({
+        Bucket: bucket,
+        Delete: { Objects: keys },
+      })
+    );
+
+    totalDeleted += keys.length;
+    continuationToken = list.IsTruncated ? list.NextContinuationToken : undefined;
+  } while (continuationToken);
+
+  return totalDeleted;
 }
 
 export async function getFileFromStorage(key: string): Promise<Buffer> {

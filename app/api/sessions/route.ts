@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { USER_ID } from "@/lib/auth";
+import { getOrCreateSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
+    const sessionId = await getOrCreateSession();
     const { testId, score, totalQuestions, results, weakConcepts } =
       await req.json();
 
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
     const testSession = await prisma.testSession.create({
       data: {
         testId,
-        userId: USER_ID,
+        sessionId,
         score,
         totalQuestions,
         results,

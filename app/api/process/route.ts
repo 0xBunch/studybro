@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { USER_ID } from "@/lib/auth";
+import { getOrCreateSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { getFileFromStorage } from "@/lib/storage";
 import { extractText } from "@/lib/parsers";
@@ -7,10 +7,11 @@ import { extractConcepts } from "@/lib/claude";
 
 export async function POST(req: NextRequest) {
   try {
+    const sessionId = await getOrCreateSession();
     const { uploadId } = await req.json();
 
     const upload = await prisma.upload.findFirst({
-      where: { id: uploadId, userId: USER_ID },
+      where: { id: uploadId, sessionId },
     });
 
     if (!upload) {

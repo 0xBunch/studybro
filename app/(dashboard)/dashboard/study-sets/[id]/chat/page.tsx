@@ -1,4 +1,4 @@
-import { USER_ID } from "@/lib/auth";
+import { getOrCreateSession, EXAMPLE_SESSION_ID } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { getTutor } from "@/lib/tutors";
@@ -14,18 +14,23 @@ interface Props {
 export default async function ChatPage({ params, searchParams }: Props) {
   const { id: studySetId } = await params;
   const { tutor: tutorId } = await searchParams;
+  const sessionId = await getOrCreateSession();
 
   const tutor = getTutor(tutorId || "socrates");
   if (!tutor) notFound();
 
   const studySet = await prisma.studySet.findFirst({
-    where: { id: studySetId, userId: USER_ID },
+    where: {
+      id: studySetId,
+      OR: [{ sessionId }, { sessionId: EXAMPLE_SESSION_ID }],
+    },
     include: {
       uploads: {
         where: { processed: true },
         select: { concepts: true },
       },
       tests: {
+        where: { sessionId },
         select: {
           sessions: {
             select: { weakConcepts: true },
@@ -65,9 +70,7 @@ export default async function ChatPage({ params, searchParams }: Props) {
             {tutor.avatar}
           </span>
           <div>
-            <h1 className="font-heading text-lg">
-              {tutor.name}
-            </h1>
+            <h1 className="font-heading text-lg">{tutor.name}</h1>
             <p className="text-xs text-muted-foreground">{studySet.title}</p>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { USER_ID } from "@/lib/auth";
+import { getOrCreateSession, EXAMPLE_SESSION_ID } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import {
   generateQuiz,
@@ -9,6 +9,7 @@ import {
 
 export async function POST(req: NextRequest) {
   try {
+    const sessionId = await getOrCreateSession();
     const { studySetId, type, config } = await req.json();
 
     if (!studySetId || !type) {
@@ -18,10 +19,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Allow reading concepts from the example study set OR the visitor's own study sets
+    const studySet = await prisma.studySet.findFirst({
+      where: {
+        id: studySetId,
+        OR: [{ sessionId }, { sessionId: EXAMPLE_SESSION_ID }],
+      },
+    });
+    if (!studySet) {
+      return NextResponse.json({ error: "Study set not found" }, { status: 404 });
+    }
+
     const uploads = await prisma.upload.findMany({
       where: {
         studySetId,
-        userId: USER_ID,
         processed: true,
       },
     });
@@ -61,10 +72,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid type" }, { status: 400 });
     }
 
+    // Tests are always owned by the visitor's session, even if reading from the example
     const test = await prisma.test.create({
       data: {
         studySetId,
-        userId: USER_ID,
+        sessionId,
         type,
         config: config || {},
         questions: questions as unknown as object,
@@ -76,7 +88,7 @@ export async function POST(req: NextRequest) {
       await prisma.card.createMany({
         data: cards.map((card) => ({
           testId: test.id,
-          userId: USER_ID,
+          sessionId,
           front: card.front,
           back: card.back,
         })),
