@@ -1,17 +1,5 @@
-// Auth is disabled for local development.
-// When re-enabled, this will use NextAuth v4 with Google OAuth.
-
-const DEV_USER = {
-  id: "dev-user",
-  name: "Dev User",
-  email: "dev@studybro.local",
-  image: null,
-};
-
-export async function auth() {
-  // Return a fake session for development
-  return {
-    user: DEV_USER,
-    expires: new Date(Date.now() + 86400000).toISOString(),
-  };
-}
+// Single-user mode — no authentication required.
+// All data is owned by this static user.
+export const USER_ID = "default-user";
+export const USER_EMAIL = "user@churro.academy";
+export const USER_NAME = "Student";

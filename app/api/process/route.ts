@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { USER_ID } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getFileFromStorage } from "@/lib/storage";
 import { extractText } from "@/lib/parsers";
@@ -7,15 +7,10 @@ import { extractConcepts } from "@/lib/claude";
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { uploadId } = await req.json();
 
     const upload = await prisma.upload.findFirst({
-      where: { id: uploadId, userId: session.user.id },
+      where: { id: uploadId, userId: USER_ID },
     });
 
     if (!upload) {

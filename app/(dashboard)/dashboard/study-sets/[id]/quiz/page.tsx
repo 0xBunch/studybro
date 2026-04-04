@@ -1,6 +1,6 @@
-import { auth } from "@/lib/auth";
+import { USER_ID } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import { QuizPlayer } from "@/components/quiz-player";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,6 @@ interface Props {
 export default async function QuizPage({ params, searchParams }: Props) {
   const { id: studySetId } = await params;
   const { testId } = await searchParams;
-  const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
 
   if (!testId) {
     return (
@@ -28,7 +26,7 @@ export default async function QuizPage({ params, searchParams }: Props) {
   }
 
   const test = await prisma.test.findFirst({
-    where: { id: testId, userId: session.user.id, studySetId },
+    where: { id: testId, userId: USER_ID, studySetId },
   });
 
   if (!test) notFound();

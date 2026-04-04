@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { USER_ID } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getPresignedUploadUrl } from "@/lib/storage";
 import { randomUUID } from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { studySetId, fileName, fileType } = await req.json();
 
     if (!studySetId || !fileName || !fileType) {
@@ -20,12 +15,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const fileKey = `${session.user.id}/${studySetId}/${randomUUID()}-${fileName}`;
+    const fileKey = `${USER_ID}/${studySetId}/${randomUUID()}-${fileName}`;
 
     const upload = await prisma.upload.create({
       data: {
         studySetId,
-        userId: session.user.id,
+        userId: USER_ID,
         fileName,
         fileKey,
         fileType,

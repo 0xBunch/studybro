@@ -1,6 +1,6 @@
-import { auth } from "@/lib/auth";
+import { USER_ID } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import { StudySetClient } from "./study-set-client";
 
 interface Props {
@@ -9,11 +9,9 @@ interface Props {
 
 export default async function StudySetDetailPage({ params }: Props) {
   const { id } = await params;
-  const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
 
   const studySet = await prisma.studySet.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, userId: USER_ID },
     include: {
       uploads: { orderBy: { createdAt: "desc" } },
       tests: {

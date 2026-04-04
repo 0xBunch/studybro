@@ -1,9 +1,8 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { auth } from "@/lib/auth";
+import { USER_ID } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,11 +13,8 @@ import {
 } from "@/components/ui/card";
 
 export default async function DashboardPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
-
   const studySets = await prisma.studySet.findMany({
-    where: { userId: session.user.id },
+    where: { userId: USER_ID },
     include: {
       _count: { select: { uploads: true, tests: true } },
     },

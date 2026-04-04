@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { USER_ID } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import {
   generateQuiz,
@@ -9,11 +9,6 @@ import {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { studySetId, type, config } = await req.json();
 
     if (!studySetId || !type) {
@@ -26,7 +21,7 @@ export async function POST(req: NextRequest) {
     const uploads = await prisma.upload.findMany({
       where: {
         studySetId,
-        userId: session.user.id,
+        userId: USER_ID,
         processed: true,
       },
     });
@@ -69,7 +64,7 @@ export async function POST(req: NextRequest) {
     const test = await prisma.test.create({
       data: {
         studySetId,
-        userId: session.user.id,
+        userId: USER_ID,
         type,
         config: config || {},
         questions: questions as unknown as object,
@@ -81,7 +76,7 @@ export async function POST(req: NextRequest) {
       await prisma.card.createMany({
         data: cards.map((card) => ({
           testId: test.id,
-          userId: session.user.id,
+          userId: USER_ID,
           front: card.front,
           back: card.back,
         })),

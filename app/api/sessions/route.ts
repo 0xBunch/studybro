@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { USER_ID } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { testId, score, totalQuestions, results, weakConcepts } =
       await req.json();
 
@@ -22,7 +17,7 @@ export async function POST(req: NextRequest) {
     const testSession = await prisma.testSession.create({
       data: {
         testId,
-        userId: session.user.id,
+        userId: USER_ID,
         score,
         totalQuestions,
         results,
