@@ -193,6 +193,25 @@ export function StudySetClient({ data }: { data: StudySetData }) {
         </Card>
       )}
 
+      {/* Study with Socrates */}
+      {data.concepts.length > 0 && (
+        <Link href={`/dashboard/study-sets/${data.id}/chat`}>
+          <Card className="transition-shadow hover:shadow-md cursor-pointer">
+            <CardContent className="flex items-center gap-4 py-5">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-lg">
+                S
+              </div>
+              <div>
+                <p className="font-medium">Study with Socrates</p>
+                <p className="text-sm text-muted-foreground">
+                  Have an adaptive conversation about your material
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      )}
+
       {/* Generate Tests */}
       {data.concepts.length > 0 && (
         <Card>
