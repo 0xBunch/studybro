@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { QuizPlayer } from "@/components/quiz-player";
 import { FlashcardPlayer } from "@/components/flashcard-player";
+import { ReverseFlashcardPlayer } from "@/components/reverse-flashcard-player";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -59,6 +60,18 @@ export default async function QuizPage({ params, searchParams }: Props) {
               options: string[];
               correctIndex: number;
               explanation: string;
+              concept: string;
+            }[]
+          }
+          studySetId={studySetId}
+        />
+      ) : test.type === "REVERSE_FLASHCARD" ? (
+        <ReverseFlashcardPlayer
+          testId={test.id}
+          cards={
+            test.questions as {
+              front: string;
+              back: string;
               concept: string;
             }[]
           }
