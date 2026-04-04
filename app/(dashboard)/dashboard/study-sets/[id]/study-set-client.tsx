@@ -52,6 +52,7 @@ export function StudySetClient({ data }: { data: StudySetData }) {
   const [saving, setSaving] = useState(false);
   const [showUploader, setShowUploader] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showAllConcepts, setShowAllConcepts] = useState(false);
 
   async function saveChanges() {
     setSaving(true);
@@ -124,72 +125,27 @@ export function StudySetClient({ data }: { data: StudySetData }) {
         </div>
       </div>
 
-      {/* Uploads + Add more */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">
-            Uploads ({data.uploads.length})
-          </CardTitle>
-          <Button size="sm" variant="outline" onClick={() => setShowUploader(!showUploader)}>
-            {showUploader ? "Hide" : "Add files"}
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {showUploader && (
-            <FileUploader
-              studySetId={data.id}
-              onUploadComplete={() => {
-                router.refresh();
-                setShowUploader(false);
-              }}
-            />
-          )}
-          {data.uploads.length === 0 && !showUploader ? (
-            <p className="text-sm text-muted-foreground">
-              No files uploaded yet. Click "Add files" to upload your notes.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {data.uploads.map((upload) => (
-                <div
-                  key={upload.id}
-                  className="flex items-center justify-between rounded-md border p-3"
-                >
-                  <span className="truncate text-sm">{upload.fileName}</span>
-                  <Badge variant={upload.processed ? "default" : "secondary"}>
-                    {upload.processed ? "Processed" : "Pending"}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Concepts */}
-      {data.concepts.length > 0 && (
+      {/* Empty state: no uploads yet */}
+      {data.uploads.length === 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              Extracted Concepts ({data.concepts.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {data.concepts.map((concept, i) => (
-                <div key={i} className="rounded-md border p-3 space-y-1">
-                  <p className="text-sm font-medium">{concept.term}</p>
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {concept.definition}
-                  </p>
-                  {concept.category && (
-                    <Badge variant="secondary" className="text-xs">
-                      {concept.category}
-                    </Badge>
-                  )}
-                </div>
-              ))}
-            </div>
+          <CardContent className="flex flex-col items-center gap-4 py-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Upload your notes to get started.
+            </p>
+            <Button size="sm" onClick={() => setShowUploader(true)}>
+              Add files
+            </Button>
+            {showUploader && (
+              <div className="w-full pt-2">
+                <FileUploader
+                  studySetId={data.id}
+                  onUploadComplete={() => {
+                    router.refresh();
+                    setShowUploader(false);
+                  }}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -269,6 +225,84 @@ export function StudySetClient({ data }: { data: StudySetData }) {
                 {data.tests.length > 0 ? "Generate another" : "Generate a test"}
               </p>
               <GenerateTestButtons studySetId={data.id} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Uploads (bottom — only when files exist) */}
+      {data.uploads.length > 0 && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base">
+              Uploads ({data.uploads.length})
+            </CardTitle>
+            <Button size="sm" variant="outline" onClick={() => setShowUploader(!showUploader)}>
+              {showUploader ? "Hide" : "Add files"}
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {showUploader && (
+              <FileUploader
+                studySetId={data.id}
+                onUploadComplete={() => {
+                  router.refresh();
+                  setShowUploader(false);
+                }}
+              />
+            )}
+            <div className="space-y-2">
+              {data.uploads.map((upload) => (
+                <div
+                  key={upload.id}
+                  className="flex items-center justify-between rounded-md border p-3"
+                >
+                  <span className="truncate text-sm">{upload.fileName}</span>
+                  <Badge variant={upload.processed ? "default" : "secondary"}>
+                    {upload.processed ? "Processed" : "Pending"}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Concepts */}
+      {data.concepts.length > 0 && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base">
+              Extracted Concepts ({data.concepts.length})
+            </CardTitle>
+            {data.concepts.length > 6 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowAllConcepts(!showAllConcepts)}
+              >
+                {showAllConcepts ? "Show less" : "Show all"}
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(showAllConcepts
+                ? data.concepts
+                : data.concepts.slice(0, 6)
+              ).map((concept, i) => (
+                <div key={i} className="rounded-md border p-3 space-y-1">
+                  <p className="text-sm font-medium">{concept.term}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">
+                    {concept.definition}
+                  </p>
+                  {concept.category && (
+                    <Badge variant="secondary" className="text-xs">
+                      {concept.category}
+                    </Badge>
+                  )}
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
