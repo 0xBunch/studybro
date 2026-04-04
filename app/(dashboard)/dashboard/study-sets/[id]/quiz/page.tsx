@@ -1,6 +1,6 @@
-import { getOrCreateSession } from "@/lib/session";
+import { getSessionIdOrNull } from "@/lib/session";
 import { prisma } from "@/lib/db";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { QuizPlayer } from "@/components/quiz-player";
 import { FlashcardPlayer } from "@/components/flashcard-player";
 import { ReverseFlashcardPlayer } from "@/components/reverse-flashcard-player";
@@ -15,7 +15,11 @@ interface Props {
 export default async function QuizPage({ params, searchParams }: Props) {
   const { id: studySetId } = await params;
   const { testId } = await searchParams;
-  const sessionId = await getOrCreateSession();
+  const sessionId = await getSessionIdOrNull();
+
+  if (!sessionId) {
+    redirect("/");
+  }
 
   if (!testId) {
     return (

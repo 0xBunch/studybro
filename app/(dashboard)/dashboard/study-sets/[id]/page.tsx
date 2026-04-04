@@ -1,4 +1,4 @@
-import { getOrCreateSession, EXAMPLE_SESSION_ID } from "@/lib/session";
+import { getSessionIdOrNull, EXAMPLE_SESSION_ID } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { StudySetClient } from "./study-set-client";
@@ -9,27 +9,34 @@ interface Props {
 
 export default async function StudySetDetailPage({ params }: Props) {
   const { id } = await params;
-  const sessionId = await getOrCreateSession();
+  const sessionId = await getSessionIdOrNull();
 
-  // Can access either the visitor's own study sets OR the shared example
+  // If we have a session, let them access their own sets OR the example.
+  // If we don't, they can still see the example (cookie will be created
+  // when they take an action that hits an API route).
+  const whereClauses = sessionId
+    ? [{ sessionId }, { sessionId: EXAMPLE_SESSION_ID }]
+    : [{ sessionId: EXAMPLE_SESSION_ID }];
+
   const studySet = await prisma.studySet.findFirst({
-    where: {
-      id,
-      OR: [{ sessionId }, { sessionId: EXAMPLE_SESSION_ID }],
-    },
+    where: { id, OR: whereClauses },
     include: {
       uploads: { orderBy: { createdAt: "desc" } },
-      tests: {
-        where: { sessionId }, // Tests are per-visitor, even on the example
-        orderBy: { createdAt: "desc" },
-        include: { _count: { select: { sessions: true } } },
-      },
     },
   });
 
   if (!studySet) notFound();
 
   const isExample = studySet.sessionId === EXAMPLE_SESSION_ID;
+
+  // Tests are scoped to the visitor's session only (example tests stay private per visitor)
+  const tests = sessionId
+    ? await prisma.test.findMany({
+        where: { studySetId: id, sessionId },
+        orderBy: { createdAt: "desc" },
+        include: { _count: { select: { sessions: true } } },
+      })
+    : [];
 
   const allConcepts = studySet.uploads.flatMap((u) => {
     const data = u.concepts as {
@@ -50,7 +57,7 @@ export default async function StudySetDetailPage({ params }: Props) {
           fileName: u.fileName,
           processed: u.processed,
         })),
-        tests: studySet.tests.map((t) => ({
+        tests: tests.map((t) => ({
           id: t.id,
           type: t.type,
           createdAt: t.createdAt.toISOString(),

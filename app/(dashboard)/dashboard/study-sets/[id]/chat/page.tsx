@@ -1,4 +1,4 @@
-import { getOrCreateSession, EXAMPLE_SESSION_ID } from "@/lib/session";
+import { getSessionIdOrNull, EXAMPLE_SESSION_ID } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { getTutor } from "@/lib/tutors";
@@ -14,30 +14,21 @@ interface Props {
 export default async function ChatPage({ params, searchParams }: Props) {
   const { id: studySetId } = await params;
   const { tutor: tutorId } = await searchParams;
-  const sessionId = await getOrCreateSession();
+  const sessionId = await getSessionIdOrNull();
 
   const tutor = getTutor(tutorId || "socrates");
   if (!tutor) notFound();
 
+  const whereClauses = sessionId
+    ? [{ sessionId }, { sessionId: EXAMPLE_SESSION_ID }]
+    : [{ sessionId: EXAMPLE_SESSION_ID }];
+
   const studySet = await prisma.studySet.findFirst({
-    where: {
-      id: studySetId,
-      OR: [{ sessionId }, { sessionId: EXAMPLE_SESSION_ID }],
-    },
+    where: { id: studySetId, OR: whereClauses },
     include: {
       uploads: {
         where: { processed: true },
         select: { concepts: true },
-      },
-      tests: {
-        where: { sessionId },
-        select: {
-          sessions: {
-            select: { weakConcepts: true },
-            orderBy: { completedAt: "desc" },
-            take: 5,
-          },
-        },
       },
     },
   });
@@ -51,10 +42,20 @@ export default async function ChatPage({ params, searchParams }: Props) {
     return data?.concepts || [];
   });
 
+  // Aggregate weak concepts from the visitor's own recent test sessions
   const weakConceptsSet = new Set<string>();
-  for (const test of studySet.tests) {
-    for (const session of test.sessions) {
-      const weak = session.weakConcepts as string[];
+  if (sessionId) {
+    const recentSessions = await prisma.testSession.findMany({
+      where: {
+        sessionId,
+        test: { studySetId },
+      },
+      select: { weakConcepts: true },
+      orderBy: { completedAt: "desc" },
+      take: 5,
+    });
+    for (const s of recentSessions) {
+      const weak = s.weakConcepts as string[];
       if (Array.isArray(weak)) {
         for (const c of weak) weakConceptsSet.add(c);
       }
