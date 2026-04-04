@@ -225,46 +225,50 @@ export function StudySetClient({ data }: { data: StudySetData }) {
         </Card>
       )}
 
-      {/* Generate Tests */}
+      {/* Tests */}
       {data.concepts.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Generate a Test</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <GenerateTestButtons studySetId={data.id} />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Previous Tests */}
-      {data.tests.length > 0 && (
-        <Card>
-          <CardHeader>
             <CardTitle className="text-base">
-              Previous Tests ({data.tests.length})
+              {data.tests.length > 0
+                ? `Tests (${data.tests.length})`
+                : "Tests"}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {data.tests.map((test) => (
-                <Link
-                  key={test.id}
-                  href={`/dashboard/study-sets/${data.id}/quiz?testId=${test.id}`}
-                  className="flex items-center justify-between rounded-md border p-3 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <Badge variant="secondary">{test.type.replace(/_/g, " ")}</Badge>
+          <CardContent className="space-y-4">
+            {data.tests.length > 0 ? (
+              <div className="space-y-2">
+                {data.tests.map((test) => (
+                  <Link
+                    key={test.id}
+                    href={`/dashboard/study-sets/${data.id}/quiz?testId=${test.id}`}
+                    className="flex items-center justify-between rounded-md border p-3 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Badge variant="secondary">
+                        {test.type.replace(/_/g, " ")}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(test.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
                     <span className="text-sm text-muted-foreground">
-                      {new Date(test.createdAt).toLocaleDateString()}
+                      {test._count.sessions}{" "}
+                      {test._count.sessions === 1 ? "attempt" : "attempts"}
                     </span>
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    {test._count.sessions}{" "}
-                    {test._count.sessions === 1 ? "attempt" : "attempts"}
-                  </span>
-                </Link>
-              ))}
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No tests yet. Generate your first one below.
+              </p>
+            )}
+            <div className="border-t pt-4">
+              <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">
+                {data.tests.length > 0 ? "Generate another" : "Generate a test"}
+              </p>
+              <GenerateTestButtons studySetId={data.id} />
             </div>
           </CardContent>
         </Card>
