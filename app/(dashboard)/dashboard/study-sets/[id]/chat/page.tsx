@@ -1,16 +1,22 @@
 import { USER_ID } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
-import { SocratesChat } from "@/components/socrates-chat";
+import { getTutor } from "@/lib/tutors";
+import { TutorChat } from "@/components/tutor-chat";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tutor?: string }>;
 }
 
-export default async function ChatPage({ params }: Props) {
+export default async function ChatPage({ params, searchParams }: Props) {
   const { id: studySetId } = await params;
+  const { tutor: tutorId } = await searchParams;
+
+  const tutor = getTutor(tutorId || "socrates");
+  if (!tutor) notFound();
 
   const studySet = await prisma.studySet.findFirst({
     where: { id: studySetId, userId: USER_ID },
@@ -40,7 +46,6 @@ export default async function ChatPage({ params }: Props) {
     return data?.concepts || [];
   });
 
-  // Aggregate weak concepts from recent test sessions
   const weakConceptsSet = new Set<string>();
   for (const test of studySet.tests) {
     for (const session of test.sessions) {
@@ -55,11 +60,16 @@ export default async function ChatPage({ params }: Props) {
   return (
     <div className="mx-auto flex h-[calc(100dvh-73px)] max-w-2xl flex-col">
       <div className="flex items-center justify-between border-b px-1 py-3">
-        <div>
-          <h1 className="font-heading text-lg font-semibold">
-            Study with Socrates
-          </h1>
-          <p className="text-xs text-muted-foreground">{studySet.title}</p>
+        <div className="flex items-center gap-3">
+          <span className="flex size-8 items-center justify-center rounded-full bg-muted text-sm">
+            {tutor.avatar}
+          </span>
+          <div>
+            <h1 className="font-heading text-lg font-semibold">
+              {tutor.name}
+            </h1>
+            <p className="text-xs text-muted-foreground">{studySet.title}</p>
+          </div>
         </div>
         <Link href={`/dashboard/study-sets/${studySetId}`}>
           <Button variant="ghost" size="sm">
@@ -68,7 +78,8 @@ export default async function ChatPage({ params }: Props) {
         </Link>
       </div>
 
-      <SocratesChat
+      <TutorChat
+        tutor={tutor}
         concepts={concepts}
         weakConcepts={weakConcepts}
         studySetId={studySetId}

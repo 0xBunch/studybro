@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { FileUploader } from "@/components/file-uploader";
 import { GenerateTestButtons } from "./generate-test-buttons";
+import { tutors } from "@/lib/tutors";
 
 interface Upload {
   id: string;
@@ -193,23 +194,35 @@ export function StudySetClient({ data }: { data: StudySetData }) {
         </Card>
       )}
 
-      {/* Study with Socrates */}
+      {/* Study with a Tutor */}
       {data.concepts.length > 0 && (
-        <Link href={`/dashboard/study-sets/${data.id}/chat`}>
-          <Card className="transition-shadow hover:shadow-md cursor-pointer">
-            <CardContent className="flex items-center gap-4 py-5">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-lg">
-                S
-              </div>
-              <div>
-                <p className="font-medium">Study with Socrates</p>
-                <p className="text-sm text-muted-foreground">
-                  Have an adaptive conversation about your material
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Study with a Tutor</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {tutors.map((tutor) => (
+                <Link
+                  key={tutor.id}
+                  href={`/dashboard/study-sets/${data.id}/chat?tutor=${tutor.id}`}
+                >
+                  <div className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 cursor-pointer h-full">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-base">
+                      {tutor.avatar}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{tutor.name}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">
+                        {tutor.description}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Generate Tests */}

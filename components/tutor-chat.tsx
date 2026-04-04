@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { Tutor } from "@/lib/tutors";
 
 interface Message {
   role: "user" | "assistant";
@@ -16,12 +17,13 @@ interface Concept {
 }
 
 interface Props {
+  tutor: Tutor;
   concepts: Concept[];
   weakConcepts: string[];
   studySetId: string;
 }
 
-export function SocratesChat({ concepts, weakConcepts, studySetId }: Props) {
+export function TutorChat({ tutor, concepts, weakConcepts, studySetId }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -52,7 +54,6 @@ export function SocratesChat({ concepts, weakConcepts, studySetId }: Props) {
       setStreaming(true);
       setInput("");
 
-      // Add empty assistant message that we'll stream into
       const assistantMsg: Message = { role: "assistant", content: "" };
       setMessages((prev) => [...prev, assistantMsg]);
 
@@ -61,9 +62,13 @@ export function SocratesChat({ concepts, weakConcepts, studySetId }: Props) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            messages: newMessages.length > 0 ? newMessages : [{ role: "user", content: "Hello! I'm ready to study." }],
+            messages:
+              newMessages.length > 0
+                ? newMessages
+                : [{ role: "user", content: "Hello! I'm ready to study." }],
             concepts,
             weakConcepts,
+            tutorId: tutor.id,
           }),
         });
 
@@ -130,7 +135,7 @@ export function SocratesChat({ concepts, weakConcepts, studySetId }: Props) {
       setStreaming(false);
       inputRef.current?.focus();
     },
-    [concepts, weakConcepts]
+    [concepts, weakConcepts, tutor.id]
   );
 
   // Auto-send greeting on mount
@@ -175,7 +180,7 @@ export function SocratesChat({ concepts, weakConcepts, studySetId }: Props) {
             >
               {msg.role === "assistant" && (
                 <span className="text-xs font-medium opacity-60 block mb-1">
-                  Socrates
+                  {tutor.name}
                 </span>
               )}
               <p className="whitespace-pre-wrap">{msg.content}</p>

@@ -1,12 +1,21 @@
 import { NextRequest } from "next/server";
 import { claude } from "@/lib/claude";
+import { getTutor } from "@/lib/tutors";
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, concepts, weakConcepts } = await req.json();
+    const { messages, concepts, weakConcepts, tutorId } = await req.json();
 
     if (!messages || !concepts) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const tutor = getTutor(tutorId || "socrates");
+    if (!tutor) {
+      return new Response(JSON.stringify({ error: "Unknown tutor" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
@@ -21,27 +30,14 @@ export async function POST(req: NextRequest) {
 
     const weakText =
       weakConcepts?.length > 0
-        ? `\n\nWEAK AREAS (from past quizzes — prioritize these):\n${weakConcepts.map((c: string) => `- ${c}`).join("\n")}`
+        ? `\nWEAK AREAS (from past quizzes — prioritize these):\n${weakConcepts.map((c: string) => `- ${c}`).join("\n")}`
         : "";
 
-    const systemPrompt = `You are Socrates, a wise and adaptive tutor for Churro Academy.
-
-TEACHING APPROACH:
-- Default to the Socratic method: ask probing questions that lead the student to discover answers themselves. "What do you think would happen if...?" "How does that relate to...?"
-- If the student struggles (gives 2+ confused or wrong answers on a topic), shift to a clear, direct explanation with an analogy or real-world example.
-- After explaining directly, circle back with a follow-up question to check their understanding.
-- Be encouraging but intellectually rigorous. Praise good thinking, not just correct answers.
+    const systemPrompt = `${tutor.systemPrompt}
 
 SUBJECT CONTEXT:
 Here are the key concepts from the student's study material:
-${conceptsText}${weakText}
-
-STYLE:
-- Keep responses concise — 2-4 sentences typical, longer only when giving a direct explanation.
-- Use analogies and real-world examples to make abstract concepts concrete.
-- Address the student directly and naturally.
-- Speak conversationally — no markdown formatting, no bullet points, no headers.
-- When starting a new topic, transition naturally from the previous one.`;
+${conceptsText}${weakText}`;
 
     const stream = await claude.messages.stream({
       model: "claude-sonnet-4-20250514",
