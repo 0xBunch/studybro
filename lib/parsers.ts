@@ -1,3 +1,5 @@
+import { extractText as extractPdfText } from "unpdf";
+
 export async function extractText(
   buffer: Buffer,
   fileType: string
@@ -18,10 +20,8 @@ export async function extractText(
 }
 
 async function extractPdf(buffer: Buffer): Promise<string> {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pdf = require("pdf-parse");
-  const data = await pdf(buffer);
-  return data.text as string;
+  const { text } = await extractPdfText(new Uint8Array(buffer));
+  return text.join("\n");
 }
 
 async function extractDocx(buffer: Buffer): Promise<string> {
