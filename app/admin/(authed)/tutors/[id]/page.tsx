@@ -1,6 +1,11 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { TutorEditForm } from "./tutor-edit-form";
+import type {
+  GoldenLines,
+  TeachingArc,
+  LiveContextConfig,
+} from "@/lib/persona-types";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -23,6 +28,14 @@ export default async function AdminTutorEditPage({ params }: Props) {
         image: tutor.image,
         scene: tutor.scene,
         systemPrompt: tutor.systemPrompt,
+        identity: tutor.identity,
+        voiceTraits: (tutor.voiceTraits as string[]) ?? [],
+        antiPatterns: (tutor.antiPatterns as string[]) ?? [],
+        goldenLines: (tutor.goldenLines as GoldenLines) ?? {},
+        vocabulary: (tutor.vocabulary as string[]) ?? [],
+        teachingArc: (tutor.teachingArc as TeachingArc) ?? {},
+        liveContext: (tutor.liveContext as LiveContextConfig | null) ?? null,
+        webSearchEnabled: tutor.webSearchEnabled,
         sortOrder: tutor.sortOrder,
         enabled: tutor.enabled,
       }}

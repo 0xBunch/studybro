@@ -23,6 +23,18 @@ export async function PATCH(
     if (typeof body.systemPrompt === "string") updates.systemPrompt = body.systemPrompt;
     if (typeof body.sortOrder === "number") updates.sortOrder = body.sortOrder;
     if (typeof body.enabled === "boolean") updates.enabled = body.enabled;
+    // v2 persona layers
+    if (typeof body.identity === "string") updates.identity = body.identity;
+    if (Array.isArray(body.voiceTraits)) updates.voiceTraits = body.voiceTraits;
+    if (Array.isArray(body.antiPatterns)) updates.antiPatterns = body.antiPatterns;
+    if (Array.isArray(body.vocabulary)) updates.vocabulary = body.vocabulary;
+    if (body.goldenLines && typeof body.goldenLines === "object")
+      updates.goldenLines = body.goldenLines;
+    if (body.teachingArc && typeof body.teachingArc === "object")
+      updates.teachingArc = body.teachingArc;
+    if ("liveContext" in body) updates.liveContext = body.liveContext;
+    if (typeof body.webSearchEnabled === "boolean")
+      updates.webSearchEnabled = body.webSearchEnabled;
 
     const tutor = await prisma.tutor.update({
       where: { id },

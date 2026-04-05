@@ -12,6 +12,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import type {
+  GoldenLines,
+  TeachingArc,
+  LiveContextConfig,
+} from "@/lib/persona-types";
 
 interface TutorData {
   id: string;
@@ -21,9 +26,35 @@ interface TutorData {
   image: string | null;
   scene: string | null;
   systemPrompt: string;
+  identity: string;
+  voiceTraits: string[];
+  antiPatterns: string[];
+  goldenLines: GoldenLines;
+  vocabulary: string[];
+  teachingArc: TeachingArc;
+  liveContext: LiveContextConfig | null;
+  webSearchEnabled: boolean;
   sortOrder: number;
   enabled: boolean;
 }
+
+const GOLDEN_LINE_KEYS: Array<keyof GoldenLines> = [
+  "opening",
+  "correct",
+  "wrong",
+  "explain",
+  "transition",
+  "closing",
+];
+
+const LIVE_SOURCES = [
+  "time",
+  "weather",
+  "news",
+  "reddit",
+  "markets",
+  "multi-news",
+] as const;
 
 export function TutorEditForm({ tutor }: { tutor: TutorData }) {
   const router = useRouter();
@@ -31,7 +62,14 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
     name: tutor.name,
     description: tutor.description,
     avatar: tutor.avatar,
-    systemPrompt: tutor.systemPrompt,
+    identity: tutor.identity,
+    voiceTraits: tutor.voiceTraits.join("\n"),
+    antiPatterns: tutor.antiPatterns.join("\n"),
+    vocabulary: tutor.vocabulary.join(", "),
+    goldenLines: tutor.goldenLines,
+    teachingArc: tutor.teachingArc,
+    liveContext: tutor.liveContext,
+    webSearchEnabled: tutor.webSearchEnabled,
     sortOrder: tutor.sortOrder,
     enabled: tutor.enabled,
   });
@@ -44,10 +82,35 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
     setSaving(true);
     setSaveStatus(null);
 
+    const payload = {
+      name: form.name,
+      description: form.description,
+      avatar: form.avatar,
+      identity: form.identity,
+      voiceTraits: form.voiceTraits
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      antiPatterns: form.antiPatterns
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      vocabulary: form.vocabulary
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      goldenLines: form.goldenLines,
+      teachingArc: form.teachingArc,
+      liveContext: form.liveContext,
+      webSearchEnabled: form.webSearchEnabled,
+      sortOrder: form.sortOrder,
+      enabled: form.enabled,
+    };
+
     const res = await fetch(`/api/admin/tutors/${tutor.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
 
     if (res.ok) {
@@ -64,19 +127,13 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
   async function handleDelete() {
     if (
       !confirm(
-        `Delete ${tutor.name}? This can't be undone. Existing chat sessions won't break, but this tutor will disappear from the picker.`
+        `Delete ${tutor.name}? This can't be undone.`
       )
     )
       return;
-
-    const res = await fetch(`/api/admin/tutors/${tutor.id}`, {
-      method: "DELETE",
-    });
-    if (res.ok) {
-      router.push("/admin");
-    } else {
-      alert("Delete failed");
-    }
+    const res = await fetch(`/api/admin/tutors/${tutor.id}`, { method: "DELETE" });
+    if (res.ok) router.push("/admin");
+    else alert("Delete failed");
   }
 
   async function handleImageUpload(
@@ -85,17 +142,14 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
   ) {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setUploadStatus(`Uploading ${kind}...`);
     const formData = new FormData();
     formData.append("file", file);
     formData.append("kind", kind);
-
     const res = await fetch(`/api/admin/tutors/${tutor.id}/image`, {
       method: "POST",
       body: formData,
     });
-
     if (res.ok) {
       setUploadStatus(`${kind} uploaded`);
       router.refresh();
@@ -119,17 +173,22 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
               Back
             </Button>
           </Link>
-          <Button variant="ghost" size="sm" onClick={handleDelete} className="text-destructive hover:text-destructive">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDelete}
+            className="text-destructive hover:text-destructive"
+          >
             Delete
           </Button>
         </div>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
-        {/* Basic fields */}
+        {/* Settings */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Details</CardTitle>
+            <CardTitle className="text-base">Settings</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -150,9 +209,9 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
                 }
               />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="avatar">Avatar (emoji fallback)</Label>
+                <Label htmlFor="avatar">Emoji fallback</Label>
                 <Input
                   id="avatar"
                   value={form.avatar}
@@ -161,53 +220,310 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="sortOrder">Sort order (lower = first)</Label>
+                <Label htmlFor="sortOrder">Sort order</Label>
                 <Input
                   id="sortOrder"
                   type="number"
                   value={form.sortOrder}
                   onChange={(e) =>
-                    setForm({ ...form, sortOrder: parseInt(e.target.value) || 0 })
+                    setForm({
+                      ...form,
+                      sortOrder: parseInt(e.target.value) || 0,
+                    })
                   }
                 />
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                id="enabled"
-                type="checkbox"
-                checked={form.enabled}
-                onChange={(e) =>
-                  setForm({ ...form, enabled: e.target.checked })
-                }
-                className="size-4"
-              />
-              <Label htmlFor="enabled" className="cursor-pointer">
-                Enabled (visible in tutor picker)
-              </Label>
+              <div className="flex items-center gap-4 pt-6">
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.enabled}
+                    onChange={(e) =>
+                      setForm({ ...form, enabled: e.target.checked })
+                    }
+                    className="size-4"
+                  />
+                  Enabled
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.webSearchEnabled}
+                    onChange={(e) =>
+                      setForm({ ...form, webSearchEnabled: e.target.checked })
+                    }
+                    className="size-4"
+                  />
+                  Web search
+                </label>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* System prompt */}
+        {/* Identity */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">System Prompt</CardTitle>
+            <CardTitle className="text-base">Identity</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              2-3 sentences, present tense. Who you are, where you&apos;re
+              speaking from. Sets the scene.
+            </p>
           </CardHeader>
           <CardContent>
             <textarea
-              value={form.systemPrompt}
-              onChange={(e) =>
-                setForm({ ...form, systemPrompt: e.target.value })
-              }
-              rows={20}
-              className="w-full resize-y rounded-lg border bg-background px-3 py-2 text-sm font-mono leading-relaxed focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              placeholder="You are..."
+              value={form.identity}
+              onChange={(e) => setForm({ ...form, identity: e.target.value })}
+              rows={4}
+              className="w-full resize-y rounded-lg border bg-background px-3 py-2 text-sm leading-relaxed focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              placeholder="You're Jared Vennett, leaning back in your chair watching the market burn..."
             />
-            <p className="text-xs text-muted-foreground mt-2">
-              The SHARED_INSTRUCTIONS (opening message, suggestions format) are
-              appended automatically.
+          </CardContent>
+        </Card>
+
+        {/* Voice + Anti-patterns */}
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Voice Traits</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                One per line. Tone, verbal tics, register.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <textarea
+                value={form.voiceTraits}
+                onChange={(e) =>
+                  setForm({ ...form, voiceTraits: e.target.value })
+                }
+                rows={8}
+                className="w-full resize-y rounded-lg border bg-background px-3 py-2 text-sm font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Anti-Patterns</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                One per line. Explicit &quot;NEVER&quot; rules.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <textarea
+                value={form.antiPatterns}
+                onChange={(e) =>
+                  setForm({ ...form, antiPatterns: e.target.value })
+                }
+                rows={8}
+                className="w-full resize-y rounded-lg border bg-background px-3 py-2 text-sm font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Golden lines */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Golden Lines</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Sample in-character lines — used as few-shot anchors in the first
+              few messages.
             </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {GOLDEN_LINE_KEYS.map((key) => (
+              <div key={key} className="space-y-1">
+                <Label htmlFor={`gl-${key}`} className="text-xs capitalize">
+                  {key}
+                </Label>
+                <Input
+                  id={`gl-${key}`}
+                  value={form.goldenLines[key] ?? ""}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      goldenLines: {
+                        ...form.goldenLines,
+                        [key]: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder={`Example line for ${key}...`}
+                  className="text-sm"
+                />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Vocabulary */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Vocabulary Bank</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Comma-separated references this character drops naturally.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <textarea
+              value={form.vocabulary}
+              onChange={(e) => setForm({ ...form, vocabulary: e.target.value })}
+              rows={3}
+              className="w-full resize-y rounded-lg border bg-background px-3 py-2 text-sm font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              placeholder="Lehman Brothers, CDOs, TARP, Bear Stearns..."
+            />
+          </CardContent>
+        </Card>
+
+        {/* Teaching Arc */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Teaching Arc</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Opening behavior</Label>
+              <Input
+                value={form.teachingArc.openingBehavior ?? ""}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    teachingArc: {
+                      ...form.teachingArc,
+                      openingBehavior: e.target.value,
+                    },
+                  })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Struggle response</Label>
+              <Input
+                value={form.teachingArc.struggleResponse ?? ""}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    teachingArc: {
+                      ...form.teachingArc,
+                      struggleResponse: e.target.value,
+                    },
+                  })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Mastery response</Label>
+              <Input
+                value={form.teachingArc.masteryResponse ?? ""}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    teachingArc: {
+                      ...form.teachingArc,
+                      masteryResponse: e.target.value,
+                    },
+                  })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Callback style</Label>
+              <Input
+                value={form.teachingArc.callbackStyle ?? ""}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    teachingArc: {
+                      ...form.teachingArc,
+                      callbackStyle: e.target.value,
+                    },
+                  })
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Live context */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Live Context</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Real-time data stream for this tutor (cached 12h).
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Source</Label>
+              <select
+                value={form.liveContext?.source ?? ""}
+                onChange={(e) => {
+                  const source = e.target.value;
+                  setForm({
+                    ...form,
+                    liveContext: source
+                      ? {
+                          source: source as LiveContextConfig["source"],
+                          config: form.liveContext?.config ?? {},
+                          framingPrompt: form.liveContext?.framingPrompt ?? "",
+                        }
+                      : null,
+                  });
+                }}
+                className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="">(none)</option>
+                {LIVE_SOURCES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {form.liveContext && (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-xs">Config (JSON)</Label>
+                  <Input
+                    value={JSON.stringify(form.liveContext.config)}
+                    onChange={(e) => {
+                      try {
+                        const config = JSON.parse(e.target.value);
+                        setForm({
+                          ...form,
+                          liveContext: form.liveContext
+                            ? { ...form.liveContext, config }
+                            : null,
+                        });
+                      } catch {
+                        // leave unparsed input untouched
+                      }
+                    }}
+                    className="font-mono text-xs"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Framing prompt</Label>
+                  <textarea
+                    value={form.liveContext.framingPrompt}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        liveContext: form.liveContext
+                          ? {
+                              ...form.liveContext,
+                              framingPrompt: e.target.value,
+                            }
+                          : null,
+                      })
+                    }
+                    rows={3}
+                    className="w-full resize-y rounded-lg border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -218,9 +534,8 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-6 sm:grid-cols-2">
-              {/* Portrait */}
               <div className="space-y-2">
-                <Label>Portrait (square, shown in picker)</Label>
+                <Label>Portrait</Label>
                 {tutor.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -239,15 +554,9 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
                   onChange={(e) => handleImageUpload(e, "image")}
                   className="text-xs"
                 />
-                {tutor.image && (
-                  <p className="text-xs text-muted-foreground font-mono truncate">
-                    {tutor.image}
-                  </p>
-                )}
               </div>
-              {/* Scene */}
               <div className="space-y-2">
-                <Label>Scene (wide, shown in chat)</Label>
+                <Label>Scene</Label>
                 {tutor.scene ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -266,11 +575,6 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
                   onChange={(e) => handleImageUpload(e, "scene")}
                   className="text-xs"
                 />
-                {tutor.scene && (
-                  <p className="text-xs text-muted-foreground font-mono truncate">
-                    {tutor.scene}
-                  </p>
-                )}
               </div>
             </div>
             {uploadStatus && (
@@ -281,10 +585,29 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
           </CardContent>
         </Card>
 
+        {/* Legacy system prompt (collapsed) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Legacy System Prompt</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Read-only reference — kept as fallback. New fields above drive
+              the tutor now.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <textarea
+              value={tutor.systemPrompt}
+              readOnly
+              rows={8}
+              className="w-full resize-y rounded-lg border bg-muted px-3 py-2 text-xs font-mono opacity-60"
+            />
+          </CardContent>
+        </Card>
+
         {/* Save */}
         <div className="flex items-center justify-end gap-3 sticky bottom-6">
           {saveStatus && (
-            <span className="text-xs font-mono text-muted-foreground">
+            <span className="text-xs font-mono text-muted-foreground bg-background px-2 py-1 rounded">
               {saveStatus}
             </span>
           )}
