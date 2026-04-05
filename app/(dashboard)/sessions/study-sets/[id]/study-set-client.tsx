@@ -68,6 +68,14 @@ export function StudySetClient({
   const [showUploader, setShowUploader] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showAllConcepts, setShowAllConcepts] = useState(false);
+  const [tutorPage, setTutorPage] = useState(0);
+
+  const TUTORS_PER_PAGE = 8;
+  const totalTutorPages = Math.ceil(tutors.length / TUTORS_PER_PAGE);
+  const pagedTutors = tutors.slice(
+    tutorPage * TUTORS_PER_PAGE,
+    (tutorPage + 1) * TUTORS_PER_PAGE
+  );
 
   async function saveChanges() {
     setSaving(true);
@@ -177,21 +185,56 @@ export function StudySetClient({
       {/* Study with a Tutor */}
       {data.concepts.length > 0 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">Study with a Tutor</CardTitle>
+            {totalTutorPages > 1 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground font-mono">
+                  {tutorPage + 1} / {totalTutorPages}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setTutorPage((p) => Math.max(0, p - 1))
+                  }
+                  disabled={tutorPage === 0}
+                  className="h-8 w-8 p-0"
+                  aria-label="Previous tutors"
+                >
+                  ‹
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setTutorPage((p) => Math.min(totalTutorPages - 1, p + 1))
+                  }
+                  disabled={tutorPage >= totalTutorPages - 1}
+                  className="h-8 w-8 p-0"
+                  aria-label="Next tutors"
+                >
+                  ›
+                </Button>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {tutors.map((tutor) => (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {pagedTutors.map((tutor) => (
                 <Link
                   key={tutor.id}
                   href={`/sessions/study-sets/${data.id}/chat?tutor=${tutor.id}`}
                 >
-                  <div className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 cursor-pointer h-full">
-                    <TutorAvatar tutor={tutor} size="md" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{tutor.name}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-1">
+                  <div className="flex items-start gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50 cursor-pointer h-full">
+                    <TutorAvatar tutor={tutor} size="lg" />
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <p className="text-sm font-medium leading-tight">
+                        {tutor.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                         {tutor.description}
                       </p>
                     </div>
