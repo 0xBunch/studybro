@@ -3,6 +3,10 @@ export interface Tutor {
   name: string;
   description: string;
   avatar: string;
+  /** Square portrait at /public/tutors/{id}.jpg — falls back to avatar emoji if missing */
+  image?: string;
+  /** Wide scene image at /public/tutors/{id}-scene.jpg — used as chat backdrop */
+  scene?: string;
   systemPrompt: string;
 }
 
@@ -34,6 +38,8 @@ export const tutors: Tutor[] = [
     name: "Socrates",
     description: "Wise philosopher who leads you to answers through questions",
     avatar: "S",
+    image: "/tutors/socrates.jpg",
+    scene: "/tutors/socrates-scene.jpg",
     systemPrompt: `You are Socrates, a wise and adaptive tutor for Churro Academy.
 
 TEACHING APPROACH:
@@ -52,6 +58,8 @@ STYLE:
     name: "The Lonely Island",
     description: "Absurdist comedy crew that makes learning absolutely unhinged",
     avatar: "🚤",
+    image: "/tutors/lonely-island.jpg",
+    scene: "/tutors/lonely-island-scene.jpg",
     systemPrompt: `You are a tutor channeling The Lonely Island (Andy Samberg, Akiva Schaffer, Jorma Taccone) AND their podcast energy (The Lonely Island and Seth Meyers Podcast) for Churro Academy.
 
 TEACHING APPROACH:
@@ -83,6 +91,8 @@ STYLE:
     name: "Seinfeld",
     description: "\"What's the DEAL with cellular respiration?\"",
     avatar: "☕",
+    image: "/tutors/seinfeld.jpg",
+    scene: "/tutors/seinfeld-scene.jpg",
     systemPrompt: `You are a tutor in the style of the Seinfeld universe for Churro Academy. You channel Jerry, George, Kramer, and Elaine's perspectives on the study material.
 
 TEACHING APPROACH:
@@ -106,6 +116,8 @@ STYLE:
     name: "Dr. Ryland Grace",
     description: "Enthusiastic science teacher who works through problems like you're crewmates",
     avatar: "🔬",
+    image: "/tutors/ryland-grace.jpg",
+    scene: "/tutors/ryland-grace-scene.jpg",
     systemPrompt: `You are Dr. Ryland Grace from Project Hail Mary, now tutoring students at Churro Academy.
 
 TEACHING APPROACH:
@@ -129,6 +141,8 @@ STYLE:
     name: "Jared Vennett",
     description: "Slick Wall Street narrator who breaks down concepts like he's shorting your exam",
     avatar: "💼",
+    image: "/tutors/jared-vennett.jpg",
+    scene: "/tutors/jared-vennett-scene.jpg",
     systemPrompt: `You are Jared Vennett from The Big Short, narrating the student's study session at Churro Academy. It is emotionally still 2008. The housing market is imploding and you're the only guy in the room who sees it.
 
 TEACHING APPROACH:
@@ -162,6 +176,8 @@ STYLE:
     name: "Weekend Update",
     description: "Colin Jost & Michael Che riff on your material like it's breaking news",
     avatar: "📰",
+    image: "/tutors/weekend-update.jpg",
+    scene: "/tutors/weekend-update-scene.jpg",
     systemPrompt: `You are Colin Jost and Michael Che hosting Weekend Update on SNL — a full decade in the chair, hundreds of episodes, the rhythm is bone-deep. Tonight, the news includes the student's study material at Churro Academy, blended with actual current headlines. You ALTERNATE between the two hosts, clearly labeled JOST and CHE.
 
 JOKE STRUCTURE (the thing that actually matters):
@@ -215,6 +231,8 @@ STYLE:
     name: "Jean-Ralphio",
     description: "Pawnee's worst human\u2014sing-songing you through the material",
     avatar: "🎤",
+    image: "/tutors/jean-ralphio.jpg",
+    scene: "/tutors/jean-ralphio-scene.jpg",
     systemPrompt: `You are Jean-Ralphio Saperstein from Parks and Recreation, but somehow you are tutoring at Churro Academy. Tom Haverford got you this gig. You are taking it weirdly seriously while also being completely yourself.
 
 TEACHING APPROACH:
@@ -238,6 +256,8 @@ STYLE:
     name: "How Did This Get Made?",
     description: "Paul Scheer, June Diane Raphael & Jason Mantzoukas picking apart the material",
     avatar: "🎬",
+    image: "/tutors/hdtgm.jpg",
+    scene: "/tutors/hdtgm-scene.jpg",
     systemPrompt: `You are the hosts of the How Did This Get Made? podcast (Paul Scheer, June Diane Raphael, Jason Mantzoukas), but instead of dissecting bad movies you're dissecting the student's study material at Churro Academy. You ALTERNATE between the three hosts, clearly labeled.
 
 TEACHING APPROACH:
@@ -270,6 +290,8 @@ STYLE:
     name: "Jake Peralta",
     description: "B99 detective turning every concept into a case he's cracking wide open",
     avatar: "🚔",
+    image: "/tutors/jake-peralta.jpg",
+    scene: "/tutors/jake-peralta-scene.jpg",
     systemPrompt: `You are Detective Jake Peralta from Brooklyn Nine-Nine. Captain Holt has assigned you to tutor at Churro Academy. You are, as always, NINE-NINE! You're taking this absolutely seriously while also being completely unserious.
 
 TEACHING APPROACH:
@@ -293,6 +315,8 @@ STYLE:
     name: "How Long Gone",
     description: "Chris Black & Jason Stewart running study session as their bicoastal elite pod",
     avatar: "🎧",
+    image: "/tutors/how-long-gone.jpg",
+    scene: "/tutors/how-long-gone-scene.jpg",
     systemPrompt: `You are Chris Black (CB, NYC) and Jason Stewart (TJ, LA) hosting How Long Gone, but the guest is the student's study material at Churro Academy. You ALTERNATE between the two hosts, clearly labeled.
 
 TEACHING APPROACH:

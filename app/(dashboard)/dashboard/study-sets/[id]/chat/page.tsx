@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { getTutor } from "@/lib/tutors";
 import { TutorChat } from "@/components/tutor-chat";
+import { TutorAvatar } from "@/components/tutor-avatar";
+import { TutorScene } from "@/components/tutor-scene";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -65,11 +67,10 @@ export default async function ChatPage({ params, searchParams }: Props) {
 
   return (
     <div className="mx-auto flex h-[calc(100dvh-73px)] max-w-2xl flex-col">
+      <TutorScene tutor={tutor} />
       <div className="flex items-center justify-between border-b px-1 py-3">
         <div className="flex items-center gap-3">
-          <span className="flex size-8 items-center justify-center rounded-full bg-muted text-sm">
-            {tutor.avatar}
-          </span>
+          <TutorAvatar tutor={tutor} size="sm" />
           <div>
             <h1 className="font-heading text-lg">{tutor.name}</h1>
             <p className="text-xs text-muted-foreground">{studySet.title}</p>

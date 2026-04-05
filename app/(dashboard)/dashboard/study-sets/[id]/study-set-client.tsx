@@ -15,6 +15,7 @@ import {
 import { FileUploader } from "@/components/file-uploader";
 import { GenerateTestButtons } from "./generate-test-buttons";
 import { tutors } from "@/lib/tutors";
+import { TutorAvatar } from "@/components/tutor-avatar";
 
 interface Upload {
   id: string;
@@ -174,9 +175,7 @@ export function StudySetClient({ data }: { data: StudySetData }) {
                   href={`/dashboard/study-sets/${data.id}/chat?tutor=${tutor.id}`}
                 >
                   <div className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 cursor-pointer h-full">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-base">
-                      {tutor.avatar}
-                    </span>
+                    <TutorAvatar tutor={tutor} size="md" />
                     <div className="min-w-0">
                       <p className="text-sm font-medium">{tutor.name}</p>
                       <p className="text-xs text-muted-foreground line-clamp-1">
