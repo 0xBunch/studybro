@@ -34,12 +34,7 @@ export function Logo({ linked = true, variant = "with-text", className }: Props)
       <img
         src="/c_logo.svg"
         alt="Churro Academy"
-        className={cn(
-          sizes[variant],
-          "w-auto",
-          // Adapts to dark mode via inversion for the logo only
-          "dark:invert"
-        )}
+        className={cn(sizes[variant], "w-auto")}
       />
       {variant !== "mark-only" && (
         <span
