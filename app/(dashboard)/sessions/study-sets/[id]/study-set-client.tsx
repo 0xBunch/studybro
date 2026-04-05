@@ -85,7 +85,7 @@ export function StudySetClient({
     if (!confirm("Delete this study set and all its data? This can't be undone.")) return;
     setDeleting(true);
     await fetch(`/api/study-sets/${data.id}`, { method: "DELETE" });
-    router.push("/dashboard");
+    router.push("/sessions");
   }
 
   return (
@@ -185,7 +185,7 @@ export function StudySetClient({
               {tutors.map((tutor) => (
                 <Link
                   key={tutor.id}
-                  href={`/dashboard/study-sets/${data.id}/chat?tutor=${tutor.id}`}
+                  href={`/sessions/study-sets/${data.id}/chat?tutor=${tutor.id}`}
                 >
                   <div className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 cursor-pointer h-full">
                     <TutorAvatar tutor={tutor} size="md" />
@@ -219,7 +219,7 @@ export function StudySetClient({
                 {data.tests.map((test) => (
                   <Link
                     key={test.id}
-                    href={`/dashboard/study-sets/${data.id}/quiz?testId=${test.id}`}
+                    href={`/sessions/study-sets/${data.id}/quiz?testId=${test.id}`}
                     className="flex items-center justify-between rounded-md border p-3 hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">

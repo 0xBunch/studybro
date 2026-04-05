@@ -28,7 +28,7 @@ export function GenerateTestButtons({ studySetId }: Props) {
     if (res.ok) {
       const { testId } = await res.json();
       router.push(
-        `/dashboard/study-sets/${studySetId}/quiz?testId=${testId}`
+        `/sessions/study-sets/${studySetId}/quiz?testId=${testId}`
       );
     }
 

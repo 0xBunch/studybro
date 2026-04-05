@@ -91,7 +91,7 @@ export default function NewStudySetPage() {
             <div className="flex justify-end">
               <Button
                 onClick={() =>
-                  router.push(`/dashboard/study-sets/${studySetId}`)
+                  router.push(`/sessions/study-sets/${studySetId}`)
                 }
               >
                 Done — View Study Set

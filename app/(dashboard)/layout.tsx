@@ -14,10 +14,10 @@ export default function DashboardLayout({
           <Logo variant="with-text" />
           <nav className="flex items-center gap-4 text-sm text-muted-foreground">
             <Link
-              href="/dashboard"
+              href="/sessions"
               className="hover:text-foreground transition-colors"
             >
-              Dashboard
+              Recent Sessions
             </Link>
           </nav>
         </div>

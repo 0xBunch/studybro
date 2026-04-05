@@ -38,7 +38,7 @@ export default async function DashboardPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-2xl">Your Study Sets</h1>
+          <h1 className="font-heading text-2xl">Recent Sessions</h1>
           <p className="text-sm text-muted-foreground">
             Active for 7 days since your last visit
           </p>
@@ -50,7 +50,7 @@ export default async function DashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         {studySets.map((set) => (
-          <Link key={set.id} href={`/dashboard/study-sets/${set.id}`}>
+          <Link key={set.id} href={`/sessions/study-sets/${set.id}`}>
             <Card className="transition-shadow hover:shadow-md h-full">
               <CardHeader>
                 <CardTitle className="font-heading text-lg">

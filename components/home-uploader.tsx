@@ -93,7 +93,7 @@ export function HomeUploader() {
         clearInterval(timer);
 
         // 4. Navigate to the study set
-        router.push(`/dashboard/study-sets/${studySetId}`);
+        router.push(`/sessions/study-sets/${studySetId}`);
       } catch (err) {
         clearInterval(timer);
         setStatus({

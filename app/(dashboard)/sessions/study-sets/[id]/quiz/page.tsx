@@ -25,7 +25,7 @@ export default async function QuizPage({ params, searchParams }: Props) {
     return (
       <div className="mx-auto max-w-2xl space-y-4 text-center py-12">
         <p className="text-muted-foreground">No test selected.</p>
-        <Link href={`/dashboard/study-sets/${studySetId}`}>
+        <Link href={`/sessions/study-sets/${studySetId}`}>
           <Button variant="outline">Back to study set</Button>
         </Link>
       </div>
@@ -49,7 +49,7 @@ export default async function QuizPage({ params, searchParams }: Props) {
     <div className="mx-auto max-w-2xl space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="font-heading text-xl">{title}</h1>
-        <Link href={`/dashboard/study-sets/${studySetId}`}>
+        <Link href={`/sessions/study-sets/${studySetId}`}>
           <Button variant="ghost" size="sm">
             Back
           </Button>

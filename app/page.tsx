@@ -43,7 +43,7 @@ export default async function HomePage() {
           {example && (
             <div className="pt-6">
               <Link
-                href={`/dashboard/study-sets/${example.id}`}
+                href={`/sessions/study-sets/${example.id}`}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"
               >
                 Or try the example →

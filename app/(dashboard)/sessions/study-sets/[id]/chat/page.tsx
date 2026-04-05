@@ -76,7 +76,7 @@ export default async function ChatPage({ params, searchParams }: Props) {
             <p className="text-xs text-muted-foreground">{studySet.title}</p>
           </div>
         </div>
-        <Link href={`/dashboard/study-sets/${studySetId}`}>
+        <Link href={`/sessions/study-sets/${studySetId}`}>
           <Button variant="ghost" size="sm">
             Back
           </Button>
