@@ -21,11 +21,11 @@ export default async function HomePage() {
       </header>
 
       <main className="flex flex-1 flex-col items-center justify-center px-6 pb-16">
-        <div className="w-full max-w-xl space-y-8 text-center">
-          <div className="flex justify-center">
+        <div className="w-full max-w-xl text-center">
+          <div className="flex justify-center mb-16">
             <Logo variant="hero" linked={false} />
           </div>
-          <div className="space-y-4">
+          <div className="space-y-4 mb-8">
             <h1 className="font-heading text-4xl tracking-tight text-balance sm:text-5xl">
               Study smarter,
               <br />
@@ -41,7 +41,7 @@ export default async function HomePage() {
           <HomeUploader />
 
           {example && (
-            <div className="pt-2">
+            <div className="pt-6">
               <Link
                 href={`/dashboard/study-sets/${example.id}`}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4"

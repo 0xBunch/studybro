@@ -39,8 +39,8 @@ export function Logo({ linked = true, variant = "with-text", className }: Props)
       {variant !== "mark-only" && (
         <span
           className={cn(
-            "font-heading tracking-tight",
-            variant === "hero" ? "text-4xl sm:text-5xl" : "text-xl"
+            "font-brand",
+            variant === "hero" ? "text-3xl sm:text-4xl" : "text-base"
           )}
         >
           Churro Academy
