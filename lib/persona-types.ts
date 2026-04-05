@@ -33,6 +33,30 @@ export interface TeachingArc {
   callbackStyle?: string;
 }
 
+export interface Catchphrase {
+  phrase: string;
+  usage: string;
+}
+
+export interface Relationship {
+  name: string;
+  role: string;
+  notes: string;
+}
+
+export interface EraAnchors {
+  years: string;
+  allowedCulturalRange: string;
+}
+
+export interface Glossary {
+  catchphrases?: Catchphrase[];
+  relationships?: Relationship[];
+  domainKnowledge?: string[];
+  settings?: string[];
+  eraAnchors?: EraAnchors;
+}
+
 export interface TutorPersona {
   id: string;
   name: string;
@@ -47,6 +71,7 @@ export interface TutorPersona {
   antiPatterns: string[];
   goldenLines: GoldenLines;
   vocabulary: string[];
+  glossary: Glossary;
   teachingArc: TeachingArc;
   liveContext: LiveContextConfig | null;
   webSearchEnabled: boolean;

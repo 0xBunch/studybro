@@ -3,6 +3,23 @@ import { prisma } from "@/lib/db";
 import { isAuthenticated } from "@/lib/admin-session";
 import { invalidateTutorCache } from "@/lib/tutors";
 
+// GET: fetch a single tutor (used by skill upgrade/audit modes)
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const tutor = await prisma.tutor.findUnique({ where: { id } });
+  if (!tutor) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  return NextResponse.json({ tutor });
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -28,6 +45,8 @@ export async function PATCH(
     if (Array.isArray(body.voiceTraits)) updates.voiceTraits = body.voiceTraits;
     if (Array.isArray(body.antiPatterns)) updates.antiPatterns = body.antiPatterns;
     if (Array.isArray(body.vocabulary)) updates.vocabulary = body.vocabulary;
+    if (body.glossary && typeof body.glossary === "object")
+      updates.glossary = body.glossary;
     if (body.goldenLines && typeof body.goldenLines === "object")
       updates.goldenLines = body.goldenLines;
     if (body.teachingArc && typeof body.teachingArc === "object")

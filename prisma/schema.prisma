@@ -23,6 +23,7 @@ model Tutor {
   antiPatterns     Json    @default("[]")
   goldenLines      Json    @default("{}")
   vocabulary       Json    @default("[]")
+  glossary         Json    @default("{}")
   teachingArc      Json    @default("{}")
   liveContext      Json?
   webSearchEnabled Boolean @default(false)

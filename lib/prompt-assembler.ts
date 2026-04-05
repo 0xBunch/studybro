@@ -82,6 +82,60 @@ export function assemblePrompt(input: AssembleInput): string {
     );
   }
 
+  // GLOSSARY — structured character knowledge (conditional per layer)
+  const glossary = persona.glossary ?? {};
+
+  // CATCHPHRASES — always, trimmed after message 5
+  if (glossary.catchphrases && glossary.catchphrases.length > 0) {
+    const max = teachingState.messageCount <= 5 ? glossary.catchphrases.length : 3;
+    const list = glossary.catchphrases
+      .slice(0, max)
+      .map((c) => `- "${c.phrase}" — ${c.usage}`)
+      .join("\n");
+    sections.push(
+      `[CATCHPHRASES — use sparingly, respect the usage notes]\n${list}`
+    );
+  }
+
+  // RELATIONSHIPS — probing/wrapping phases
+  if (
+    teachingState.phase !== "opening" &&
+    glossary.relationships &&
+    glossary.relationships.length > 0
+  ) {
+    const list = glossary.relationships
+      .map((r) => `- ${r.name} (${r.role}): ${r.notes}`)
+      .join("\n");
+    sections.push(
+      `[RELATIONSHIPS — reference naturally when it fits the teaching moment]\n${list}`
+    );
+  }
+
+  // DOMAIN KNOWLEDGE — always (character's mental library for analogies)
+  if (glossary.domainKnowledge && glossary.domainKnowledge.length > 0) {
+    sections.push(
+      `[DOMAIN KNOWLEDGE BANK — things this character knows and reaches for]\n${glossary.domainKnowledge.join(", ")}`
+    );
+  }
+
+  // SETTINGS — opening message + when describing a scene
+  if (
+    teachingState.phase === "opening" &&
+    glossary.settings &&
+    glossary.settings.length > 0
+  ) {
+    sections.push(
+      `[SETTINGS — where this character exists physically]\n${glossary.settings.join(", ")}`
+    );
+  }
+
+  // ERA ANCHORS — always for period characters
+  if (glossary.eraAnchors) {
+    sections.push(
+      `[ERA ANCHORS — NEVER reference things outside this range]\nYears: ${glossary.eraAnchors.years}\nAllowed: ${glossary.eraAnchors.allowedCulturalRange}`
+    );
+  }
+
   // GOLDEN LINES — only in opening phase to anchor voice
   if (teachingState.phase === "opening") {
     const lines = Object.entries(persona.goldenLines)

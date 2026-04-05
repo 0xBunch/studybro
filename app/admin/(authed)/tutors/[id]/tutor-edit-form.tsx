@@ -16,6 +16,9 @@ import type {
   GoldenLines,
   TeachingArc,
   LiveContextConfig,
+  Glossary,
+  Catchphrase,
+  Relationship,
 } from "@/lib/persona-types";
 
 interface TutorData {
@@ -31,6 +34,7 @@ interface TutorData {
   antiPatterns: string[];
   goldenLines: GoldenLines;
   vocabulary: string[];
+  glossary: Glossary;
   teachingArc: TeachingArc;
   liveContext: LiveContextConfig | null;
   webSearchEnabled: boolean;
@@ -66,6 +70,7 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
     voiceTraits: tutor.voiceTraits.join("\n"),
     antiPatterns: tutor.antiPatterns.join("\n"),
     vocabulary: tutor.vocabulary.join(", "),
+    glossary: tutor.glossary,
     goldenLines: tutor.goldenLines,
     teachingArc: tutor.teachingArc,
     liveContext: tutor.liveContext,
@@ -100,6 +105,7 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
         .map((s) => s.trim())
         .filter(Boolean),
       goldenLines: form.goldenLines,
+      glossary: form.glossary,
       teachingArc: form.teachingArc,
       liveContext: form.liveContext,
       webSearchEnabled: form.webSearchEnabled,
@@ -376,6 +382,12 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
           </CardContent>
         </Card>
 
+        {/* Glossary — structured character knowledge */}
+        <GlossaryEditor
+          glossary={form.glossary}
+          onChange={(g) => setForm({ ...form, glossary: g })}
+        />
+
         {/* Teaching Arc */}
         <Card>
           <CardHeader>
@@ -617,5 +629,258 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
         </div>
       </form>
     </div>
+  );
+}
+
+// ─── Glossary editor subcomponent ───────────────────────────────────────────
+
+function GlossaryEditor({
+  glossary,
+  onChange,
+}: {
+  glossary: Glossary;
+  onChange: (g: Glossary) => void;
+}) {
+  const catchphrases = glossary.catchphrases ?? [];
+  const relationships = glossary.relationships ?? [];
+  const domain = (glossary.domainKnowledge ?? []).join(", ");
+  const settings = (glossary.settings ?? []).join(", ");
+  const eraYears = glossary.eraAnchors?.years ?? "";
+  const eraRange = glossary.eraAnchors?.allowedCulturalRange ?? "";
+
+  const updateCatchphrase = (i: number, patch: Partial<Catchphrase>) => {
+    const next = [...catchphrases];
+    next[i] = { ...next[i], ...patch };
+    onChange({ ...glossary, catchphrases: next });
+  };
+  const addCatchphrase = () =>
+    onChange({
+      ...glossary,
+      catchphrases: [...catchphrases, { phrase: "", usage: "" }],
+    });
+  const removeCatchphrase = (i: number) =>
+    onChange({
+      ...glossary,
+      catchphrases: catchphrases.filter((_, idx) => idx !== i),
+    });
+
+  const updateRelationship = (i: number, patch: Partial<Relationship>) => {
+    const next = [...relationships];
+    next[i] = { ...next[i], ...patch };
+    onChange({ ...glossary, relationships: next });
+  };
+  const addRelationship = () =>
+    onChange({
+      ...glossary,
+      relationships: [...relationships, { name: "", role: "", notes: "" }],
+    });
+  const removeRelationship = (i: number) =>
+    onChange({
+      ...glossary,
+      relationships: relationships.filter((_, idx) => idx !== i),
+    });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Glossary</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Structured character knowledge — catchphrases, relationships, domain
+          knowledge, settings, and era anchors.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Catchphrases */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm">Catchphrases</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={addCatchphrase}
+            >
+              + Add
+            </Button>
+          </div>
+          {catchphrases.length === 0 && (
+            <p className="text-xs text-muted-foreground italic">No catchphrases yet.</p>
+          )}
+          {catchphrases.map((c, i) => (
+            <div key={i} className="flex gap-2 items-start">
+              <Input
+                value={c.phrase}
+                onChange={(e) => updateCatchphrase(i, { phrase: e.target.value })}
+                placeholder='"NOICE"'
+                className="flex-1 font-mono text-xs"
+              />
+              <Input
+                value={c.usage}
+                onChange={(e) => updateCatchphrase(i, { usage: e.target.value })}
+                placeholder="rarely, genuine surprise"
+                className="flex-1 text-xs"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => removeCatchphrase(i)}
+                className="text-destructive"
+              >
+                ×
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        {/* Relationships */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm">Relationships</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={addRelationship}
+            >
+              + Add
+            </Button>
+          </div>
+          {relationships.length === 0 && (
+            <p className="text-xs text-muted-foreground italic">No relationships yet.</p>
+          )}
+          {relationships.map((r, i) => (
+            <div key={i} className="grid grid-cols-[1fr_1fr_2fr_auto] gap-2 items-start">
+              <Input
+                value={r.name}
+                onChange={(e) => updateRelationship(i, { name: e.target.value })}
+                placeholder="Boyle"
+                className="text-xs"
+              />
+              <Input
+                value={r.role}
+                onChange={(e) => updateRelationship(i, { role: e.target.value })}
+                placeholder="partner"
+                className="text-xs"
+              />
+              <Input
+                value={r.notes}
+                onChange={(e) => updateRelationship(i, { notes: e.target.value })}
+                placeholder="loves food analogies"
+                className="text-xs"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => removeRelationship(i)}
+                className="text-destructive"
+              >
+                ×
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        {/* Domain Knowledge */}
+        <div className="space-y-2">
+          <Label className="text-sm">Domain Knowledge</Label>
+          <p className="text-xs text-muted-foreground">
+            Comma-separated topic banks this character draws from for analogies.
+          </p>
+          <textarea
+            value={domain}
+            onChange={(e) =>
+              onChange({
+                ...glossary,
+                domainKnowledge: e.target.value
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter(Boolean),
+              })
+            }
+            rows={2}
+            className="w-full resize-y rounded-lg border bg-background px-3 py-2 text-xs font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            placeholder="Die Hard, Halloween Heists, Boyle's sauces..."
+          />
+        </div>
+
+        {/* Settings */}
+        <div className="space-y-2">
+          <Label className="text-sm">Settings</Label>
+          <p className="text-xs text-muted-foreground">
+            Comma-separated physical places this character exists in.
+          </p>
+          <textarea
+            value={settings}
+            onChange={(e) =>
+              onChange({
+                ...glossary,
+                settings: e.target.value
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter(Boolean),
+              })
+            }
+            rows={2}
+            className="w-full resize-y rounded-lg border bg-background px-3 py-2 text-xs font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            placeholder="Precinct bullpen, evidence locker, Boyle's food truck..."
+          />
+        </div>
+
+        {/* Era Anchors */}
+        <div className="space-y-2">
+          <Label className="text-sm">Era Anchors (optional)</Label>
+          <p className="text-xs text-muted-foreground">
+            Only for period characters. Keeps references inside the right time window.
+          </p>
+          <div className="grid gap-2 sm:grid-cols-[1fr_2fr]">
+            <Input
+              value={eraYears}
+              onChange={(e) =>
+                onChange({
+                  ...glossary,
+                  eraAnchors: {
+                    years: e.target.value,
+                    allowedCulturalRange: eraRange,
+                  },
+                })
+              }
+              placeholder="2007-2009"
+              className="text-xs"
+            />
+            <Input
+              value={eraRange}
+              onChange={(e) =>
+                onChange({
+                  ...glossary,
+                  eraAnchors: {
+                    years: eraYears,
+                    allowedCulturalRange: e.target.value,
+                  },
+                })
+              }
+              placeholder="iPhone 3G era, Obama '08, Dark Knight..."
+              className="text-xs"
+            />
+          </div>
+          {(eraYears || eraRange) && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const next = { ...glossary };
+                delete next.eraAnchors;
+                onChange(next);
+              }}
+              className="text-xs text-muted-foreground"
+            >
+              Clear era anchors
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

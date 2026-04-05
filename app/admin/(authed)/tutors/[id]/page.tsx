@@ -5,6 +5,7 @@ import type {
   GoldenLines,
   TeachingArc,
   LiveContextConfig,
+  Glossary,
 } from "@/lib/persona-types";
 
 interface Props {
@@ -33,6 +34,7 @@ export default async function AdminTutorEditPage({ params }: Props) {
         antiPatterns: (tutor.antiPatterns as string[]) ?? [],
         goldenLines: (tutor.goldenLines as GoldenLines) ?? {},
         vocabulary: (tutor.vocabulary as string[]) ?? [],
+        glossary: (tutor.glossary as Glossary) ?? {},
         teachingArc: (tutor.teachingArc as TeachingArc) ?? {},
         liveContext: (tutor.liveContext as LiveContextConfig | null) ?? null,
         webSearchEnabled: tutor.webSearchEnabled,

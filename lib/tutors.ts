@@ -4,6 +4,7 @@ import type {
   GoldenLines,
   TeachingArc,
   LiveContextConfig,
+  Glossary,
 } from "@/lib/persona-types";
 
 // Legacy flat type, still referenced by UI components. Minimal shape.
@@ -43,6 +44,7 @@ export async function getAllTutors(): Promise<TutorPersona[]> {
     antiPatterns: (r.antiPatterns as string[]) ?? [],
     goldenLines: (r.goldenLines as GoldenLines) ?? {},
     vocabulary: (r.vocabulary as string[]) ?? [],
+    glossary: (r.glossary as Glossary) ?? {},
     teachingArc: (r.teachingArc as TeachingArc) ?? {},
     liveContext: (r.liveContext as LiveContextConfig | null) ?? null,
     webSearchEnabled: r.webSearchEnabled,
