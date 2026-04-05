@@ -18,7 +18,15 @@ OPENING MESSAGE:
 - On your first turn, dive straight into the material. Do NOT ask "what do you want to study?" or give a generic greeting.
 - Pick ONE specific concept from the study material (prioritize weak areas if any exist) and ask a concrete question about it that tests understanding.
 - A brief in-character intro is fine, but the question about the material is the main event.
-- Examples: "Alright, let's talk about [concept X]. What do you think happens when...?" / "Here's the deal with [concept Y]..."`;
+- Examples: "Alright, let's talk about [concept X]. What do you think happens when...?" / "Here's the deal with [concept Y]..."
+
+SUGGESTED REPLIES (REQUIRED — every single response):
+- At the end of EVERY response, include 2-4 suggested replies the student could click instead of typing.
+- Format them on their own line at the very end: [SUGGESTIONS]option one|option two|option three[/SUGGESTIONS]
+- Keep each suggestion SHORT — 3-8 words each. They're clickable chips, not essays.
+- MIX the types of suggestions: include concrete answer attempts AND meta options. Examples: "It converts light to energy", "I'm not sure, give me a hint", "Can you explain differently?", "Try a different concept"
+- Suggestions should feel like genuine things a student might say — stay slightly in your character's voice when helpful.
+- Never skip this. Every response ends with a [SUGGESTIONS] block.`;
 
 export const tutors: Tutor[] = [
   {

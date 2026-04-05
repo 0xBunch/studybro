@@ -23,6 +23,24 @@ interface Props {
   studySetId: string;
 }
 
+const SUGGESTIONS_REGEX = /\[SUGGESTIONS\]([\s\S]*?)\[\/SUGGESTIONS\]/;
+
+function parseMessage(content: string): {
+  text: string;
+  suggestions: string[];
+} {
+  const match = content.match(SUGGESTIONS_REGEX);
+  if (!match) {
+    return { text: content, suggestions: [] };
+  }
+  const suggestions = match[1]
+    .split("|")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const text = content.replace(SUGGESTIONS_REGEX, "").trim();
+  return { text, suggestions };
+}
+
 export function TutorChat({ tutor, concepts, weakConcepts, studySetId }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -164,40 +182,72 @@ export function TutorChat({ tutor, concepts, weakConcepts, studySetId }: Props) 
     }
   };
 
+  const lastMessage = messages[messages.length - 1];
+  const lastParsed =
+    lastMessage?.role === "assistant" && !streaming
+      ? parseMessage(lastMessage.content)
+      : null;
+
   return (
     <>
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 py-4">
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={cn(
-              "flex",
-              msg.role === "user" ? "justify-end" : "justify-start"
-            )}
-          >
+        {messages.map((msg, i) => {
+          const isLast = i === messages.length - 1;
+          const { text } = parseMessage(msg.content);
+          // While streaming, keep raw content visible so suggestions get stripped naturally
+          const visibleText =
+            streaming && isLast && msg.role === "assistant"
+              ? msg.content.replace(/\[SUGGESTIONS\][\s\S]*/, "")
+              : text;
+          return (
             <div
+              key={i}
               className={cn(
-                "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-                msg.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted"
+                "flex",
+                msg.role === "user" ? "justify-end" : "justify-start"
               )}
             >
-              {msg.role === "assistant" && (
-                <span className="text-xs font-medium opacity-60 block mb-1">
-                  {tutor.name}
-                </span>
-              )}
-              <p className="whitespace-pre-wrap">{msg.content}</p>
-              {streaming &&
-                i === messages.length - 1 &&
-                msg.role === "assistant" && (
-                  <span className="inline-block w-1.5 h-4 bg-current opacity-40 animate-pulse ml-0.5 align-text-bottom" />
+              <div
+                className={cn(
+                  "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                  msg.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted"
                 )}
+              >
+                {msg.role === "assistant" && (
+                  <span className="text-xs font-medium opacity-60 block mb-1">
+                    {tutor.name}
+                  </span>
+                )}
+                <p className="whitespace-pre-wrap">{visibleText}</p>
+                {streaming &&
+                  isLast &&
+                  msg.role === "assistant" && (
+                    <span className="inline-block w-1.5 h-4 bg-current opacity-40 animate-pulse ml-0.5 align-text-bottom" />
+                  )}
+              </div>
             </div>
+          );
+        })}
+
+        {/* Suggestion chips — only on the latest assistant message after streaming completes */}
+        {lastParsed && lastParsed.suggestions.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {lastParsed.suggestions.map((suggestion, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => sendMessage(suggestion, messages)}
+                disabled={streaming}
+                className="rounded-full border bg-background px-3 py-1.5 text-xs text-foreground/80 transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {suggestion}
+              </button>
+            ))}
           </div>
-        ))}
+        )}
 
         {messages.length === 0 && !streaming && (
           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
