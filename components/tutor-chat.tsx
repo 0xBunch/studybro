@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { Tutor } from "@/lib/tutors";
+import type { TutorPersona as Tutor } from "@/lib/persona-types";
 import { renderNewsCardDataUrl } from "@/lib/newscard";
 
 interface Message {

@@ -21,7 +21,7 @@ interface TutorSummary {
   name: string;
   description: string;
   avatar: string;
-  image?: string;
+  image: string | null;
 }
 
 interface Upload {

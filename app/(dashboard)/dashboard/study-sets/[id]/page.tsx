@@ -55,7 +55,7 @@ export default async function StudySetDetailPage({ params }: Props) {
         name: t.name,
         description: t.description,
         avatar: t.avatar,
-        image: t.image ?? undefined,
+        image: t.image ?? null,
       }))}
       data={{
         id: studySet.id,

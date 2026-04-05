@@ -16,7 +16,17 @@ model Tutor {
   avatar       String
   image        String?
   scene        String?
-  systemPrompt String
+  systemPrompt String // legacy — deprecated after v2 persona layers stable
+  // ─── v2 persona layers ────────────────────────────────────────────────────
+  identity         String  @default("")
+  voiceTraits      Json    @default("[]")
+  antiPatterns     Json    @default("[]")
+  goldenLines      Json    @default("{}")
+  vocabulary       Json    @default("[]")
+  teachingArc      Json    @default("{}")
+  liveContext      Json?
+  webSearchEnabled Boolean @default(false)
+  // ──────────────────────────────────────────────────────────────────────────
   sortOrder    Int      @default(0)
   enabled      Boolean  @default(true)
   createdAt    DateTime @default(now())

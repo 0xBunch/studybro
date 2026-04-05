@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import type { Tutor } from "@/lib/tutors";
+import type { TutorPersona as Tutor } from "@/lib/persona-types";
 
 interface Props {
   tutor: Pick<Tutor, "id" | "avatar" | "image" | "name">;

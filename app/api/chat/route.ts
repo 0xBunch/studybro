@@ -1,7 +1,22 @@
 import { NextRequest } from "next/server";
 import { claude } from "@/lib/claude";
 import { getTutor } from "@/lib/tutors";
-import { getCategoryHeadlines } from "@/lib/news";
+import { assemblePrompt } from "@/lib/prompt-assembler";
+import { computeTeachingState } from "@/lib/session-state";
+import { getLiveContextForTutor } from "@/lib/tutor-context";
+
+const WEEKEND_UPDATE_NEWSCARD_INSTRUCTIONS = `
+
+NEWS CARDS (Weekend Update only):
+Every response that introduces a new concept MUST include EXACTLY ONE news card marker on its own line, placed BEFORE [SUGGESTIONS]:
+[NEWSCARD: <pun headline, 3-7 words> | <cartoon description, 1 sentence, no text in image, SFW>]
+
+Examples:
+- [NEWSCARD: Plants Are Solar Farmers Now | A cartoon sunflower in overalls holding a tiny pitchfork, bright sky]
+- [NEWSCARD: Mitochondria Files For Overtime | A tiny bean-shaped cell part wearing a hardhat, clocking in at a factory]
+- [NEWSCARD: Osmosis: The Great Water Heist | A cartoon water droplet sneaking past a bouncer at a nightclub labeled CELL]
+
+The pun lands in the headline. The cartoon description is a single visual idea — keep it concrete, no text inside the image.`;
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,61 +37,38 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const conceptsText = concepts
-      .map(
-        (c: { term: string; definition: string; category: string }) =>
-          `- ${c.term} (${c.category}): ${c.definition}`
-      )
-      .join("\n");
+    // Compute dynamic teaching state from message history
+    const teachingState = computeTeachingState(messages);
 
-    const weakText =
-      weakConcepts?.length > 0
-        ? `\nWEAK AREAS (from past quizzes — prioritize these):\n${weakConcepts.map((c: string) => `- ${c}`).join("\n")}`
-        : "";
+    // Fetch live context for this tutor (cached 12h)
+    const liveContext = await getLiveContextForTutor(tutor);
 
-    // For Weekend Update, inject real current headlines by category so jokes can be topical
-    let newsBlock = "";
+    // Assemble the layered prompt
+    let systemPrompt = assemblePrompt({
+      persona: tutor,
+      concepts,
+      weakConcepts: weakConcepts ?? [],
+      messages,
+      teachingState,
+      liveContext,
+    });
+
+    // Weekend Update needs the newscard instructions tacked on
     if (tutor.id === "weekend-update") {
-      const categories = await getCategoryHeadlines(4);
-      const nonEmpty = categories.filter((c) => c.headlines.length > 0);
-      if (nonEmpty.length > 0) {
-        const formatted = nonEmpty
-          .map((c) => {
-            const items = c.headlines
-              .map(
-                (h) =>
-                  `  - ${h.title}${h.source ? ` [${h.source}]` : ""}${h.description ? `\n    "${h.description}"` : ""}`
-              )
-              .join("\n");
-            return `${c.category.toUpperCase()}:\n${items}`;
-          })
-          .join("\n\n");
-        newsBlock = `
-
-TODAY'S REAL HEADLINES (by category — use these to set up topical jokes that bridge to the study concepts):
-
-${formatted}
-
-When you can, bridge from a real headline to a concept. Example: "In news today, [real headline]. Which reminds us, tonight we're talking about [concept]..." Pick headlines from the category most relevant to the concept (e.g. Science for biology, Tech for computing). Don't force every joke to use a headline, but weave them in when it lands.
-
-NEWS CARDS:
-Every response that introduces a new concept MUST include EXACTLY ONE news card marker on its own line, placed BEFORE [SUGGESTIONS]:
-[NEWSCARD: <pun headline, 3-7 words> | <cartoon description, 1 sentence, no text in image, SFW>]
-
-Examples:
-- [NEWSCARD: Plants Are Solar Farmers Now | A cartoon sunflower in overalls holding a tiny pitchfork, bright sky]
-- [NEWSCARD: Mitochondria Files For Overtime | A tiny bean-shaped cell part wearing a hardhat, clocking in at a factory]
-- [NEWSCARD: Osmosis: The Great Water Heist | A cartoon water droplet sneaking past a bouncer at a nightclub labeled CELL]
-
-The pun lands in the headline. The cartoon description is a single visual idea for an AI image generator — keep it concrete, no text inside the image (text gets overlaid in code).`;
-      }
+      systemPrompt += WEEKEND_UPDATE_NEWSCARD_INSTRUCTIONS;
     }
 
-    const systemPrompt = `${tutor.systemPrompt}
-
-SUBJECT CONTEXT:
-Here are the key concepts from the student's study material:
-${conceptsText}${weakText}${newsBlock}`;
+    // Conditionally add web_search tool
+    const tools =
+      tutor.webSearchEnabled
+        ? [
+            {
+              type: "web_search_20250305" as const,
+              name: "web_search" as const,
+              max_uses: 3,
+            },
+          ]
+        : undefined;
 
     const stream = await claude.messages.stream({
       model: "claude-sonnet-4-20250514",
@@ -86,6 +78,7 @@ ${conceptsText}${weakText}${newsBlock}`;
         role: m.role as "user" | "assistant",
         content: m.content,
       })),
+      ...(tools && { tools }),
     });
 
     const encoder = new TextEncoder();
