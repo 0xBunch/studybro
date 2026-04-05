@@ -31,7 +31,7 @@ export function TutorAvatar({ tutor, size = "md", className }: Props) {
       {showImage ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={tutor.image}
+          src={tutor.image!}
           alt={tutor.name}
           className="size-full object-cover"
           onError={() => setErrored(true)}

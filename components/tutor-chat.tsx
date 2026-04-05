@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Tutor } from "@/lib/tutors";
+import { renderNewsCardDataUrl } from "@/lib/newscard";
 
 interface Message {
   role: "user" | "assistant";
@@ -24,21 +25,39 @@ interface Props {
 }
 
 const SUGGESTIONS_REGEX = /\[SUGGESTIONS\]([\s\S]*?)\[\/SUGGESTIONS\]/;
+const NEWSCARD_REGEX = /\[NEWSCARD:\s*([^|\]]+?)\s*\|\s*([^\]]+?)\s*\]/;
 
-function parseMessage(content: string): {
+interface ParsedMessage {
   text: string;
   suggestions: string[];
-} {
-  const match = content.match(SUGGESTIONS_REGEX);
-  if (!match) {
-    return { text: content, suggestions: [] };
-  }
-  const suggestions = match[1]
-    .split("|")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const text = content.replace(SUGGESTIONS_REGEX, "").trim();
-  return { text, suggestions };
+  newsCard: { pun: string; desc: string } | null;
+}
+
+function parseMessage(content: string): ParsedMessage {
+  const suggestMatch = content.match(SUGGESTIONS_REGEX);
+  const suggestions = suggestMatch
+    ? suggestMatch[1].split("|").map((s) => s.trim()).filter(Boolean)
+    : [];
+
+  const newsCardMatch = content.match(NEWSCARD_REGEX);
+  const newsCard = newsCardMatch
+    ? { pun: newsCardMatch[1].trim(), desc: newsCardMatch[2].trim() }
+    : null;
+
+  const text = content
+    .replace(SUGGESTIONS_REGEX, "")
+    .replace(NEWSCARD_REGEX, "")
+    .trim();
+
+  return { text, suggestions, newsCard };
+}
+
+function stripInProgressMarkers(content: string): string {
+  // While streaming, strip any partial markers from view so the user never sees them
+  return content
+    .replace(/\[SUGGESTIONS\][\s\S]*/, "")
+    .replace(/\[NEWSCARD:[\s\S]*/, "")
+    .trim();
 }
 
 export function TutorChat({ tutor, concepts, weakConcepts, studySetId }: Props) {
@@ -194,12 +213,13 @@ export function TutorChat({ tutor, concepts, weakConcepts, studySetId }: Props) 
       <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 py-4">
         {messages.map((msg, i) => {
           const isLast = i === messages.length - 1;
-          const { text } = parseMessage(msg.content);
-          // While streaming, keep raw content visible so suggestions get stripped naturally
-          const visibleText =
-            streaming && isLast && msg.role === "assistant"
-              ? msg.content.replace(/\[SUGGESTIONS\][\s\S]*/, "")
-              : text;
+          const isStreamingThis =
+            streaming && isLast && msg.role === "assistant";
+          const parsed = parseMessage(msg.content);
+          const visibleText = isStreamingThis
+            ? stripInProgressMarkers(msg.content)
+            : parsed.text;
+          const showNewsCard = !isStreamingThis && parsed.newsCard;
           return (
             <div
               key={i}
@@ -210,23 +230,41 @@ export function TutorChat({ tutor, concepts, weakConcepts, studySetId }: Props) 
             >
               <div
                 className={cn(
-                  "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-                  msg.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                  "max-w-[85%] space-y-2",
+                  msg.role === "user" ? "items-end" : "items-start"
                 )}
               >
-                {msg.role === "assistant" && (
-                  <span className="text-xs font-medium opacity-60 block mb-1">
-                    {tutor.name}
-                  </span>
+                {showNewsCard && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={renderNewsCardDataUrl({
+                      pun: parsed.newsCard!.pun,
+                      cartoonDesc: parsed.newsCard!.desc,
+                    })}
+                    alt={parsed.newsCard!.pun}
+                    className="rounded-xl border w-full max-w-md shadow-sm"
+                  />
                 )}
-                <p className="whitespace-pre-wrap">{visibleText}</p>
-                {streaming &&
-                  isLast &&
-                  msg.role === "assistant" && (
-                    <span className="inline-block w-1.5 h-4 bg-current opacity-40 animate-pulse ml-0.5 align-text-bottom" />
+                <div
+                  className={cn(
+                    "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
                   )}
+                >
+                  {msg.role === "assistant" && (
+                    <span className="text-xs font-medium opacity-60 block mb-1">
+                      {tutor.name}
+                    </span>
+                  )}
+                  <p className="whitespace-pre-wrap">{visibleText}</p>
+                  {streaming &&
+                    isLast &&
+                    msg.role === "assistant" && (
+                      <span className="inline-block w-1.5 h-4 bg-current opacity-40 animate-pulse ml-0.5 align-text-bottom" />
+                    )}
+                </div>
               </div>
             </div>
           );

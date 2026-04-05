@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { EXAMPLE_SESSION_ID } from "@/lib/session";
 import { HomeUploader } from "@/components/home-uploader";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Logo } from "@/components/logo";
 
 export const dynamic = "force-dynamic";
 
@@ -15,17 +16,17 @@ export default async function HomePage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="flex items-center justify-between px-6 py-4">
-        <Link href="/" className="font-heading text-xl tracking-tight">
-          Churro Academy
-        </Link>
+      <header className="flex items-center justify-end px-6 py-4">
         <ThemeToggle />
       </header>
 
       <main className="flex flex-1 flex-col items-center justify-center px-6 pb-16">
         <div className="w-full max-w-xl space-y-8 text-center">
+          <div className="flex justify-center">
+            <Logo variant="hero" linked={false} />
+          </div>
           <div className="space-y-4">
-            <h1 className="font-heading text-5xl tracking-tight text-balance sm:text-6xl">
+            <h1 className="font-heading text-4xl tracking-tight text-balance sm:text-5xl">
               Study smarter,
               <br />
               <span className="italic">not harder.</span>

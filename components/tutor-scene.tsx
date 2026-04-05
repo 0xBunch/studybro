@@ -21,7 +21,7 @@ export function TutorScene({ tutor }: Props) {
     <div className="relative h-24 w-full overflow-hidden rounded-lg border bg-muted">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={tutor.scene}
+        src={tutor.scene!}
         alt={`${tutor.name} scene`}
         className="size-full object-cover opacity-80"
         onError={() => setErrored(true)}

@@ -14,8 +14,15 @@ import {
 } from "@/components/ui/card";
 import { FileUploader } from "@/components/file-uploader";
 import { GenerateTestButtons } from "./generate-test-buttons";
-import { tutors } from "@/lib/tutors";
 import { TutorAvatar } from "@/components/tutor-avatar";
+
+interface TutorSummary {
+  id: string;
+  name: string;
+  description: string;
+  avatar: string;
+  image?: string;
+}
 
 interface Upload {
   id: string;
@@ -46,7 +53,13 @@ interface StudySetData {
   concepts: Concept[];
 }
 
-export function StudySetClient({ data }: { data: StudySetData }) {
+export function StudySetClient({
+  data,
+  tutors,
+}: {
+  data: StudySetData;
+  tutors: TutorSummary[];
+}) {
   const router = useRouter();
   const [title, setTitle] = useState(data.title);
   const [description, setDescription] = useState(data.description ?? "");

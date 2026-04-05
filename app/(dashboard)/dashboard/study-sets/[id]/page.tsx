@@ -2,6 +2,7 @@ import { getSessionIdOrNull, EXAMPLE_SESSION_ID } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { StudySetClient } from "./study-set-client";
+import { getAllTutors } from "@/lib/tutors";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -45,8 +46,17 @@ export default async function StudySetDetailPage({ params }: Props) {
     return data?.concepts || [];
   });
 
+  const tutors = await getAllTutors();
+
   return (
     <StudySetClient
+      tutors={tutors.map((t) => ({
+        id: t.id,
+        name: t.name,
+        description: t.description,
+        avatar: t.avatar,
+        image: t.image ?? undefined,
+      }))}
       data={{
         id: studySet.id,
         title: studySet.title,

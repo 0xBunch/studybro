@@ -18,7 +18,7 @@ export default async function ChatPage({ params, searchParams }: Props) {
   const { tutor: tutorId } = await searchParams;
   const sessionId = await getSessionIdOrNull();
 
-  const tutor = getTutor(tutorId || "socrates");
+  const tutor = await getTutor(tutorId || "socrates");
   if (!tutor) notFound();
 
   const whereClauses = sessionId

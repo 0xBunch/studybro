@@ -3,6 +3,7 @@ config({ path: ".env.local" });
 
 import { PrismaClient } from "../lib/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { tutors as HARDCODED_TUTORS } from "../lib/tutors-seed";
 
 const EXAMPLE_SESSION_ID = "example";
 
@@ -172,6 +173,29 @@ async function main() {
 
   console.log(`✓ Example study set created: ${studySet.id}`);
   console.log(`  ${EXAMPLE_CONCEPTS.length} concepts loaded`);
+
+  // Seed tutors from hardcoded list — upsert so existing admin edits are preserved
+  console.log("\nSeeding tutors...");
+  for (let i = 0; i < HARDCODED_TUTORS.length; i++) {
+    const t = HARDCODED_TUTORS[i];
+    await prisma.tutor.upsert({
+      where: { id: t.id },
+      update: {}, // preserve admin-edited fields if already present
+      create: {
+        id: t.id,
+        name: t.name,
+        description: t.description,
+        avatar: t.avatar,
+        image: t.image ?? null,
+        scene: t.scene ?? null,
+        systemPrompt: t.systemPrompt,
+        sortOrder: i,
+        enabled: true,
+      },
+    });
+    console.log(`  ✓ ${t.name}`);
+  }
+  console.log(`\n${HARDCODED_TUTORS.length} tutors seeded.`);
 
   await prisma.$disconnect();
 }

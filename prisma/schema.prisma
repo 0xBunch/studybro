@@ -7,6 +7,22 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─── Tutor Config (managed via admin) ───────────────────────────────────────
+
+model Tutor {
+  id           String   @id // slug: "socrates", "jake-peralta", etc.
+  name         String
+  description  String
+  avatar       String
+  image        String?
+  scene        String?
+  systemPrompt String
+  sortOrder    Int      @default(0)
+  enabled      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 // ─── Anonymous Session ──────────────────────────────────────────────────────
 
 model Session {
