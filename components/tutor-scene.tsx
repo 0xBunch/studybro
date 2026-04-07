@@ -24,7 +24,7 @@ export function TutorScene({ tutor }: Props) {
       <img
         src={tutor.scene!}
         alt={`${tutor.name} scene`}
-        className="w-full h-auto max-h-64 object-contain"
+        className="w-full h-64 object-cover"
         onError={() => setErrored(true)}
       />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-background/40 to-transparent" />

@@ -81,30 +81,34 @@ async def upload_audio(
     if len(content) < 1000:
         raise HTTPException(status_code=400, detail="Audio file too small")
 
-    # Save as WAV (convert if needed)
+    # Save reference audio
     voice_path = VOICES_DIR / f"{audio_file_label}.wav"
 
     try:
-        # Try loading with torchaudio to normalize format
+        # Read with soundfile (reliable, no CUDA deps)
         audio_buffer = io.BytesIO(content)
-        waveform, sample_rate = torchaudio.load(audio_buffer)
+        data, sample_rate = sf.read(audio_buffer)
+
+        # Convert to mono if stereo
+        if len(data.shape) > 1:
+            data = data.mean(axis=1)
 
         # Resample to 24kHz if needed (F5-TTS native rate)
         if sample_rate != 24000:
             resampler = torchaudio.transforms.Resample(sample_rate, 24000)
-            waveform = resampler(waveform)
+            tensor = torch.from_numpy(data).float().unsqueeze(0)
+            tensor = resampler(tensor)
+            sf.write(str(voice_path), tensor.squeeze().numpy(), 24000)
+        else:
+            sf.write(str(voice_path), data, 24000)
 
-        # Convert to mono if stereo
-        if waveform.shape[0] > 1:
-            waveform = waveform.mean(dim=0, keepdim=True)
-
-        torchaudio.save(str(voice_path), waveform, 24000)
+        duration = len(data) / sample_rate
     except Exception as e:
-        # Fallback: save raw and hope F5-TTS handles it
+        # Fallback: save raw and let F5-TTS handle it
         logger.warning(f"Audio conversion failed, saving raw: {e}")
         voice_path.write_bytes(content)
+        duration = 0.0
 
-    duration = torchaudio.info(str(voice_path)).num_frames / 24000
     logger.info(
         f"Voice '{audio_file_label}' registered ({duration:.1f}s audio)"
     )
