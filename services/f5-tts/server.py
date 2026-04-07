@@ -125,9 +125,21 @@ async def synthesize_speech(
     text: str = Query(..., description="Text to synthesize"),
     voice: str = Query(..., description="Voice label from upload_audio"),
     speed: float = Query(1.0, ge=0.5, le=2.0, description="Playback speed"),
+    ref_audio_url: str = Query("", description="URL to fetch reference audio if not cached locally"),
 ):
     """Synthesize speech using a previously registered voice."""
     voice_path = VOICES_DIR / f"{voice}.wav"
+
+    # Auto-fetch reference audio from URL if not cached locally
+    if not voice_path.exists() and ref_audio_url:
+        logger.info(f"Voice '{voice}' not cached, fetching from {ref_audio_url}")
+        try:
+            import urllib.request
+            urllib.request.urlretrieve(ref_audio_url, str(voice_path))
+            logger.info(f"Fetched voice '{voice}' ({voice_path.stat().st_size} bytes)")
+        except Exception as e:
+            logger.error(f"Failed to fetch reference audio: {e}")
+
     if not voice_path.exists():
         raise HTTPException(
             status_code=404,

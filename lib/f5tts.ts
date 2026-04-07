@@ -40,13 +40,17 @@ export async function registerVoice(
 /** Synthesize speech using a previously registered voice. Returns raw WAV bytes. */
 export async function synthesizeSpeech(
   text: string,
-  voiceLabel: string
+  voiceLabel: string,
+  refAudioUrl?: string
 ): Promise<Buffer> {
   const base = getBaseUrl();
 
   const url = new URL(`${base}/synthesize_speech/`);
   url.searchParams.set("text", text);
   url.searchParams.set("voice", voiceLabel);
+  if (refAudioUrl) {
+    url.searchParams.set("ref_audio_url", refAudioUrl);
+  }
 
   const res = await fetch(url.toString());
 
