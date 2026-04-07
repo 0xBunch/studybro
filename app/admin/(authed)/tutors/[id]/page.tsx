@@ -38,6 +38,8 @@ export default async function AdminTutorEditPage({ params }: Props) {
         teachingArc: (tutor.teachingArc as TeachingArc) ?? {},
         liveContext: (tutor.liveContext as LiveContextConfig | null) ?? null,
         webSearchEnabled: tutor.webSearchEnabled,
+        ttsVoiceLabel: tutor.ttsVoiceLabel,
+        ttsRefAudio: tutor.ttsRefAudio,
         sortOrder: tutor.sortOrder,
         enabled: tutor.enabled,
       }}

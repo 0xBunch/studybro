@@ -27,6 +27,8 @@ model Tutor {
   teachingArc      Json    @default("{}")
   liveContext      Json?
   webSearchEnabled Boolean @default(false)
+  ttsVoiceLabel    String?  // F5-TTS voice label (used in /synthesize_speech)
+  ttsRefAudio      String?  // S3 key for the uploaded reference audio clip
   // ──────────────────────────────────────────────────────────────────────────
   sortOrder    Int      @default(0)
   enabled      Boolean  @default(true)

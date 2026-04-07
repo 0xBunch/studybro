@@ -48,6 +48,7 @@ export async function getAllTutors(): Promise<TutorPersona[]> {
     teachingArc: (r.teachingArc as TeachingArc) ?? {},
     liveContext: (r.liveContext as LiveContextConfig | null) ?? null,
     webSearchEnabled: r.webSearchEnabled,
+    ttsVoiceLabel: r.ttsVoiceLabel,
     legacySystemPrompt: r.systemPrompt,
     sortOrder: r.sortOrder,
     enabled: r.enabled,

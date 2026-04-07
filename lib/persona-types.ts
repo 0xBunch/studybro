@@ -75,6 +75,7 @@ export interface TutorPersona {
   teachingArc: TeachingArc;
   liveContext: LiveContextConfig | null;
   webSearchEnabled: boolean;
+  ttsVoiceLabel: string | null;
 
   // Legacy fallback while migrating
   legacySystemPrompt: string;

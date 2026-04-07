@@ -38,6 +38,8 @@ interface TutorData {
   teachingArc: TeachingArc;
   liveContext: LiveContextConfig | null;
   webSearchEnabled: boolean;
+  ttsVoiceLabel: string | null;
+  ttsRefAudio: string | null;
   sortOrder: number;
   enabled: boolean;
 }
@@ -81,6 +83,9 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const [voiceStatus, setVoiceStatus] = useState<string | null>(null);
+  const [voiceLabel, setVoiceLabel] = useState(tutor.ttsVoiceLabel);
+  const [voiceRefAudio, setVoiceRefAudio] = useState(tutor.ttsRefAudio);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -163,6 +168,44 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
     } else {
       const data = await res.json().catch(() => ({}));
       setUploadStatus(`Upload failed: ${data.error || "unknown"}`);
+    }
+  }
+
+  async function handleVoiceUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setVoiceStatus("Uploading & registering voice...");
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`/api/admin/tutors/${tutor.id}/voice`, {
+      method: "POST",
+      body: formData,
+    });
+    if (res.ok) {
+      setVoiceLabel(tutor.id);
+      setVoiceRefAudio(`/api/files/tutors/${tutor.id}/voice-ref-latest`);
+      setVoiceStatus("Voice registered");
+      router.refresh();
+      setTimeout(() => setVoiceStatus(null), 3000);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setVoiceStatus(`Failed: ${data.error || "unknown"}`);
+    }
+  }
+
+  async function handleVoiceRemove() {
+    if (!confirm("Remove this tutor's voice?")) return;
+    const res = await fetch(`/api/admin/tutors/${tutor.id}/voice`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      setVoiceLabel(null);
+      setVoiceRefAudio(null);
+      setVoiceStatus("Voice removed");
+      router.refresh();
+      setTimeout(() => setVoiceStatus(null), 3000);
+    } else {
+      setVoiceStatus("Remove failed");
     }
   }
 
@@ -592,6 +635,61 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
             {uploadStatus && (
               <p className="text-xs font-mono text-muted-foreground">
                 {uploadStatus}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Voice (TTS) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Voice</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Upload 5-25 seconds of reference audio to clone this
+              character&apos;s voice via F5-TTS.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div
+                className={`size-2 rounded-full ${voiceLabel ? "bg-green-500" : "bg-muted-foreground/30"}`}
+              />
+              <span className="text-sm">
+                {voiceLabel ? "Voice registered" : "No voice"}
+              </span>
+            </div>
+            {voiceRefAudio && (
+              <audio
+                controls
+                src={voiceRefAudio}
+                className="w-full h-8"
+                preload="none"
+              >
+                <track kind="captions" />
+              </audio>
+            )}
+            <div className="flex items-center gap-3">
+              <input
+                type="file"
+                accept="audio/*"
+                onChange={handleVoiceUpload}
+                className="text-xs"
+              />
+              {voiceLabel && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleVoiceRemove}
+                  className="text-destructive hover:text-destructive text-xs"
+                >
+                  Remove voice
+                </Button>
+              )}
+            </div>
+            {voiceStatus && (
+              <p className="text-xs font-mono text-muted-foreground">
+                {voiceStatus}
               </p>
             )}
           </CardContent>
