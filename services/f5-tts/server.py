@@ -50,7 +50,7 @@ def get_model():
 
     from f5_tts.api import F5TTS
 
-    _model = F5TTS(model_type="F5-TTS", device=DEVICE)
+    _model = F5TTS(model="F5TTS_v1_Base", device=DEVICE)
     logger.info(f"Model loaded in {time.time() - start:.1f}s on {DEVICE}")
     return _model
 
@@ -142,7 +142,7 @@ async def synthesize_speech(
 
     try:
         # F5-TTS inference
-        wav, sr, _ = model.infer(
+        wav, sr = model.infer(
             ref_file=str(voice_path),
             ref_text="",  # Empty = auto-transcribe reference
             gen_text=text,
