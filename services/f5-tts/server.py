@@ -135,7 +135,9 @@ async def synthesize_speech(
         logger.info(f"Voice '{voice}' not cached, fetching from {ref_audio_url}")
         try:
             import urllib.request
-            urllib.request.urlretrieve(ref_audio_url, str(voice_path))
+            req = urllib.request.Request(ref_audio_url, headers={"User-Agent": "F5-TTS-Server/1.0"})
+            with urllib.request.urlopen(req) as resp:
+                voice_path.write_bytes(resp.read())
             logger.info(f"Fetched voice '{voice}' ({voice_path.stat().st_size} bytes)")
         except Exception as e:
             logger.error(f"Failed to fetch reference audio: {e}")
