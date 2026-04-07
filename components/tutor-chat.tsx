@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { TutorPersona as Tutor } from "@/lib/persona-types";
 import { renderNewsCardDataUrl } from "@/lib/newscard";
-import { SpeakerButton } from "@/components/speaker-button";
+// TTS paused — F5-TTS needs GPU, revisit when backend is sorted
+// import { SpeakerButton } from "@/components/speaker-button";
 
 interface Message {
   role: "user" | "assistant";
@@ -255,14 +256,9 @@ export function TutorChat({ tutor, concepts, weakConcepts, studySetId }: Props) 
                   )}
                 >
                   {msg.role === "assistant" && (
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <span className="text-xs font-medium opacity-60">
-                        {tutor.name}
-                      </span>
-                      {!isStreamingThis && tutor.ttsVoiceLabel && (
-                        <SpeakerButton text={parsed.text} tutorId={tutor.id} />
-                      )}
-                    </div>
+                    <span className="text-xs font-medium opacity-60 block mb-1">
+                      {tutor.name}
+                    </span>
                   )}
                   <p className="whitespace-pre-wrap">{visibleText}</p>
                   {streaming &&
