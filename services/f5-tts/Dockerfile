@@ -16,7 +16,8 @@ RUN pip install --no-cache-dir \
 # Install remaining dependencies
 COPY services/f5-tts/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt \
-    && pip uninstall -y torchcodec 2>/dev/null; true
+    && pip uninstall -y torchcodec 2>/dev/null; true \
+    && rm -rf /usr/local/lib/python3.11/site-packages/torchcodec* 2>/dev/null; true
 
 # Copy server code
 COPY services/f5-tts/server.py .
