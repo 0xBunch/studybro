@@ -40,6 +40,7 @@ interface TutorData {
   webSearchEnabled: boolean;
   ttsVoiceLabel: string | null;
   ttsRefAudio: string | null;
+  ttsRefText: string | null;
   sortOrder: number;
   enabled: boolean;
 }
@@ -77,6 +78,7 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
     teachingArc: tutor.teachingArc,
     liveContext: tutor.liveContext,
     webSearchEnabled: tutor.webSearchEnabled,
+    ttsRefText: tutor.ttsRefText || "",
     sortOrder: tutor.sortOrder,
     enabled: tutor.enabled,
   });
@@ -114,6 +116,7 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
       teachingArc: form.teachingArc,
       liveContext: form.liveContext,
       webSearchEnabled: form.webSearchEnabled,
+      ttsRefText: form.ttsRefText,
       sortOrder: form.sortOrder,
       enabled: form.enabled,
     };
@@ -697,6 +700,18 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
                 </Button>
               )}
             </div>
+            {voiceLabel && (
+              <div className="space-y-2">
+                <Label className="text-xs">Reference text (what&apos;s said in the clip)</Label>
+                <textarea
+                  value={form.ttsRefText}
+                  onChange={(e) => setForm({ ...form, ttsRefText: e.target.value })}
+                  rows={2}
+                  className="w-full resize-y rounded-lg border bg-background px-3 py-2 text-xs font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  placeholder="Type exactly what's said in the reference audio..."
+                />
+              </div>
+            )}
             {voiceStatus && (
               <p className="text-xs font-mono text-muted-foreground">
                 {voiceStatus}

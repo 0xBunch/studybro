@@ -54,6 +54,7 @@ export async function PATCH(
     if ("liveContext" in body) updates.liveContext = body.liveContext;
     if (typeof body.webSearchEnabled === "boolean")
       updates.webSearchEnabled = body.webSearchEnabled;
+    if (typeof body.ttsRefText === "string") updates.ttsRefText = body.ttsRefText;
 
     const tutor = await prisma.tutor.update({
       where: { id },

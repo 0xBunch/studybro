@@ -40,6 +40,7 @@ export default async function AdminTutorEditPage({ params }: Props) {
         webSearchEnabled: tutor.webSearchEnabled,
         ttsVoiceLabel: tutor.ttsVoiceLabel,
         ttsRefAudio: tutor.ttsRefAudio,
+        ttsRefText: tutor.ttsRefText,
         sortOrder: tutor.sortOrder,
         enabled: tutor.enabled,
       }}

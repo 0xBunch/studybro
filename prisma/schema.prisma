@@ -29,6 +29,7 @@ model Tutor {
   webSearchEnabled Boolean @default(false)
   ttsVoiceLabel    String?  // F5-TTS voice label (used in /synthesize_speech)
   ttsRefAudio      String?  // S3 key for the uploaded reference audio clip
+  ttsRefText       String?  // Transcript of the reference audio (skips Whisper)
   // ──────────────────────────────────────────────────────────────────────────
   sortOrder    Int      @default(0)
   enabled      Boolean  @default(true)

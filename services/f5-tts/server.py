@@ -126,6 +126,7 @@ async def synthesize_speech(
     voice: str = Query(..., description="Voice label from upload_audio"),
     speed: float = Query(1.0, ge=0.5, le=2.0, description="Playback speed"),
     ref_audio_url: str = Query("", description="URL to fetch reference audio if not cached locally"),
+    ref_text: str = Query("", description="Transcript of reference audio (skips Whisper if provided)"),
 ):
     """Synthesize speech using a previously registered voice."""
     voice_path = VOICES_DIR / f"{voice}.wav"
@@ -158,7 +159,7 @@ async def synthesize_speech(
         # F5-TTS inference
         wav, sr = model.infer(
             ref_file=str(voice_path),
-            ref_text="",  # Empty = auto-transcribe reference
+            ref_text=ref_text,  # Empty = auto-transcribe via Whisper (slow)
             gen_text=text,
             speed=speed,
         )

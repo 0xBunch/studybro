@@ -41,7 +41,8 @@ export async function registerVoice(
 export async function synthesizeSpeech(
   text: string,
   voiceLabel: string,
-  refAudioUrl?: string
+  refAudioUrl?: string,
+  refText?: string
 ): Promise<Buffer> {
   const base = getBaseUrl();
 
@@ -50,6 +51,9 @@ export async function synthesizeSpeech(
   url.searchParams.set("voice", voiceLabel);
   if (refAudioUrl) {
     url.searchParams.set("ref_audio_url", refAudioUrl);
+  }
+  if (refText) {
+    url.searchParams.set("ref_text", refText);
   }
 
   const res = await fetch(url.toString());

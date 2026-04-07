@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
     const tutor = await prisma.tutor.findUnique({
       where: { id: tutorId },
-      select: { ttsVoiceLabel: true, ttsRefAudio: true },
+      select: { ttsVoiceLabel: true, ttsRefAudio: true, ttsRefText: true },
     });
     if (!tutor || !tutor.ttsVoiceLabel) {
       return NextResponse.json(
@@ -36,7 +36,12 @@ export async function POST(req: NextRequest) {
       ? `${origin}${tutor.ttsRefAudio}`
       : undefined;
 
-    const wavBuffer = await synthesizeSpeech(trimmed, tutor.ttsVoiceLabel, refAudioUrl);
+    const wavBuffer = await synthesizeSpeech(
+      trimmed,
+      tutor.ttsVoiceLabel,
+      refAudioUrl,
+      tutor.ttsRefText || undefined
+    );
     const base64 = wavBuffer.toString("base64");
 
     return NextResponse.json({
