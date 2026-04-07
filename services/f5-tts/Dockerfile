@@ -7,15 +7,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Pin PyTorch 2.1.2 — torchaudio >= 2.9 forces torchcodec (needs CUDA).
-# 2.1.2 has multiple audio backends and works on CPU without torchcodec.
-RUN pip install --no-cache-dir \
-    torch==2.1.2 torchaudio==2.1.2 \
-    --index-url https://download.pytorch.org/whl/cpu
-
-# Install remaining dependencies
+# Install f5-tts first (it pulls its own torch/torchaudio)
 COPY services/f5-tts/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Force-downgrade to PyTorch 2.1.2 AFTER f5-tts installs.
+# torchaudio >= 2.9 forces torchcodec (needs CUDA).
+# 2.1.2 has multiple audio backends and works on CPU.
+RUN pip install --no-cache-dir --force-reinstall \
+    torch==2.1.2 torchaudio==2.1.2 \
+    --index-url https://download.pytorch.org/whl/cpu
 
 # Copy server code
 COPY services/f5-tts/server.py .
