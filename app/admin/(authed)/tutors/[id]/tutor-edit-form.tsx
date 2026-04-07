@@ -182,8 +182,9 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
       body: formData,
     });
     if (res.ok) {
+      const data = await res.json().catch(() => ({}));
       setVoiceLabel(tutor.id);
-      setVoiceRefAudio(`/api/files/tutors/${tutor.id}/voice-ref-latest`);
+      setVoiceRefAudio(data.refAudioUrl || null);
       setVoiceStatus("Voice registered");
       router.refresh();
       setTimeout(() => setVoiceStatus(null), 3000);

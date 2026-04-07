@@ -47,7 +47,7 @@ export async function POST(
     });
 
     invalidateTutorCache();
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, refAudioUrl });
   } catch (error) {
     console.error("POST /api/admin/tutors/[id]/voice error:", error);
     return NextResponse.json(
