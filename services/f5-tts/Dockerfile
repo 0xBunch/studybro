@@ -17,7 +17,8 @@ RUN pip install --no-cache-dir \
 COPY services/f5-tts/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt \
     && pip uninstall -y torchcodec 2>/dev/null; true \
-    && rm -rf /usr/local/lib/python3.11/site-packages/torchcodec* 2>/dev/null; true
+    && rm -rf /usr/local/lib/python3.11/site-packages/torchcodec* 2>/dev/null; true \
+    && python -c "import importlib.util; assert importlib.util.find_spec('torchcodec') is None, 'torchcodec still installed!'"
 
 # Copy server code
 COPY services/f5-tts/server.py .

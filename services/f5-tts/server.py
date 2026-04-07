@@ -11,16 +11,10 @@ Endpoints:
 
 import io
 import os
-import sys
 import time
 import logging
 from pathlib import Path
 
-# Block torchcodec — it needs CUDA .so files we don't have on CPU.
-# This makes F5-TTS fall back to torchaudio for audio loading.
-import types
-sys.modules["torchcodec"] = types.ModuleType("torchcodec")
-sys.modules["torchcodec.decoders"] = types.ModuleType("torchcodec.decoders")
 
 import soundfile as sf
 import torch
