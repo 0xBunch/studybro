@@ -31,8 +31,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Build absolute URL for ref audio so F5-TTS can fetch it if voice isn't cached
+    const origin = process.env.NEXT_PUBLIC_URL || `https://${req.headers.get("host")}`;
     const refAudioUrl = tutor.ttsRefAudio
-      ? `${req.nextUrl.origin}${tutor.ttsRefAudio}`
+      ? `${origin}${tutor.ttsRefAudio}`
       : undefined;
 
     const wavBuffer = await synthesizeSpeech(trimmed, tutor.ttsVoiceLabel, refAudioUrl);
