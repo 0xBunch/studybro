@@ -1,8 +1,9 @@
 FROM python:3.11-slim
 
-# Audio processing dependencies
+# Audio processing dependencies (libavcodec-dev needed by torchcodec)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg sox libsox-fmt-all libsndfile1-dev git \
+    ffmpeg libavcodec-dev libavformat-dev libavutil-dev \
+    sox libsox-fmt-all libsndfile1-dev git \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -14,7 +15,8 @@ RUN pip install --no-cache-dir \
 
 # Install remaining dependencies
 COPY services/f5-tts/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip uninstall -y torchcodec 2>/dev/null; true
 
 # Copy server code
 COPY services/f5-tts/server.py .
