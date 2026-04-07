@@ -15,14 +15,16 @@ export async function registerVoice(
   const base = getBaseUrl();
 
   const formData = new FormData();
-  formData.append("audio_file_label", label);
   formData.append(
     "file",
     new Blob([new Uint8Array(audioBuffer)], { type: "audio/wav" }),
     `${label}.wav`
   );
 
-  const res = await fetch(`${base}/upload_audio/`, {
+  const url = new URL(`${base}/upload_audio/`);
+  url.searchParams.set("audio_file_label", label);
+
+  const res = await fetch(url.toString(), {
     method: "POST",
     body: formData,
   });
