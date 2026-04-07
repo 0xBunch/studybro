@@ -13,12 +13,12 @@ RUN pip install --no-cache-dir \
     --index-url https://download.pytorch.org/whl/cpu
 
 # Install remaining dependencies
-COPY requirements.txt .
+COPY services/f5-tts/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy server code
-COPY server.py .
-COPY voices/ ./voices/
+COPY services/f5-tts/server.py .
+RUN mkdir -p voices
 
 # HuggingFace cache — model downloads on first request
 ENV HF_HOME=/tmp/hf_cache
@@ -28,4 +28,5 @@ ENV DEVICE=cpu
 EXPOSE 8000
 
 # Single worker to avoid OOM on CPU instances
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--timeout-keep-alive", "300"]
+# Railway sets PORT dynamically — fall back to 8000 for local dev
+CMD uvicorn server:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --timeout-keep-alive 300
