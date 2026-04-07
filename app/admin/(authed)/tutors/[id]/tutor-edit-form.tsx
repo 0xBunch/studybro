@@ -603,12 +603,15 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
                     {tutor.avatar}
                   </div>
                 )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleImageUpload(e, "image")}
-                  className="text-xs"
-                />
+                <label className="inline-flex items-center gap-1.5 rounded-md border bg-muted px-2.5 py-1 text-xs text-muted-foreground cursor-pointer hover:bg-muted/80 transition-colors">
+                  Upload
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e, "image")}
+                    className="sr-only"
+                  />
+                </label>
               </div>
               <div className="space-y-2">
                 <Label>Scene</Label>
@@ -624,12 +627,15 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
                     No scene yet
                   </div>
                 )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleImageUpload(e, "scene")}
-                  className="text-xs"
-                />
+                <label className="inline-flex items-center gap-1.5 rounded-md border bg-muted px-2.5 py-1 text-xs text-muted-foreground cursor-pointer hover:bg-muted/80 transition-colors">
+                  Upload
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e, "scene")}
+                    className="sr-only"
+                  />
+                </label>
               </div>
             </div>
             {uploadStatus && (
@@ -669,12 +675,15 @@ export function TutorEditForm({ tutor }: { tutor: TutorData }) {
               </audio>
             )}
             <div className="flex items-center gap-3">
-              <input
-                type="file"
-                accept="audio/*"
-                onChange={handleVoiceUpload}
-                className="text-xs"
-              />
+              <label className="inline-flex items-center gap-1.5 rounded-md border bg-muted px-2.5 py-1 text-xs text-muted-foreground cursor-pointer hover:bg-muted/80 transition-colors">
+                Upload audio
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleVoiceUpload}
+                  className="sr-only"
+                />
+              </label>
               {voiceLabel && (
                 <Button
                   type="button"
