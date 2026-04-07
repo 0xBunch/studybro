@@ -11,11 +11,12 @@ WORKDIR /app
 COPY services/f5-tts/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Force-downgrade to PyTorch 2.1.2 AFTER f5-tts installs.
+# Force-downgrade to PyTorch 2.1.2 CPU AFTER f5-tts installs.
 # torchaudio >= 2.9 forces torchcodec (needs CUDA).
 # 2.1.2 has multiple audio backends and works on CPU.
-RUN pip install --no-cache-dir --force-reinstall \
-    torch==2.1.2 torchaudio==2.1.2 \
+# Use +cpu suffix to get the correct CPU-only wheels.
+RUN pip install --no-cache-dir \
+    torch==2.1.2+cpu torchaudio==2.1.2+cpu \
     --index-url https://download.pytorch.org/whl/cpu
 
 # Copy server code
